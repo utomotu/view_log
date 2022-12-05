@@ -12,7 +12,6 @@ from janome.tokenizer import Tokenizer
 import pandas as pd
 import create_wordcloud as cw
 
-
 hinshi_list = ["その他", "感動詞", "記号", "形容詞", "名詞", "助詞", "助動詞", "接続詞", "接頭詞", "動詞", "副詞", "連体詞"] #抽象的なリストの「漫画」の具体例
 # hinshi_list = ["その他", "感動詞", "記号", "形容詞", "名詞",] #抽象的なリストの「漫画」の具体例
 
@@ -147,7 +146,6 @@ class read_csv():
             self.day=sorted(self.day)
             self.windowOB=sorted(self.windowOB)
             self.speaker=sorted(self.speaker)
-            print(self.windowOB)
 
         file = open(openFileName, 'r', encoding="utf_8")
         data = csv.reader(file)

@@ -20,8 +20,9 @@ stop_words = ['感じ','もう','し','ん','よう','ー','の','ー','ー'
               'でしょ', 'せる', 'なれ', 'どう', 'たい', 'けど', 'でも', 'って',
               'まで', 'なく', 'もの', 'ここ', 'どこ', 'そこ', 'さえ', 'なく',
               'たり', 'なり', 'だっ', 'まで', 'ため', 'ながら', 'より', 'られる', 'です']
+DIR_NAME = "../speech_to_text_2121040"
+VIEWLOG_DIR_PATH = DIR_NAME+"/VIEWLOG_FILE/"#ログを保存する場所
 
-CSVFILENAME ="2022-10-17_openlab"
 # CSVFILENAME ="./sr_copy"
 mecab = MeCab.Tagger()
 mecab.parse('')
@@ -230,11 +231,11 @@ def create_choiced_wordcloud(word_only_data, save_file_name, hinshilist):
     # ワードクラウドの作成
     try:
         wordcloud.generate(te)
-        wordcloud.to_file('USER_check.png') 
+        wordcloud.to_file(VIEWLOG_DIR_PATH+'checed_USER.png') 
     except BaseException as e:
         print(e)
     try:
         wordcloud.generate(text2)
-        wordcloud.to_file('PC_check.png') 
+        wordcloud.to_file(VIEWLOG_DIR_PATH+'checed_PC.png') 
     except BaseException as e:
         print(e)
