@@ -58,44 +58,6 @@ def readCsv(openFileName):
     # print(textsum1,textsum2)
     return text, text2
 
-"""
-def mecab_tt(text):    
-    # 分かち書きのみ出力する設定にする
-    # mecab = MeCab.Tagger("-Ochasen")
-    # mecab = MeCab.Tagger("-Owakati")
-    # mecab = MeCab.Tagger()
-    # mecab.parse('')
-    # node = mecab.parseToNode(text)
-    # mecab = MeCab.Tagger('-Ochasen')
-    # node = mecab.parseToNode(text)
- 
-    # tagger = MeCab.Tagger("-Ochasen")
-    mecab.parse('')
-    result = mecab.parseToNode(text)
-    # print(result)
-    # mecab.parse('')
-    lines = result.split('\n')
-    nounAndVerb = []#「名詞」と「動詞」を格納するリスト
-    hinshiList = []
-    for line in  lines:
-        feature = line.split('\t')
-        # print(feature)
-        if len(feature) != 1: #'EOS'と''を省く
-            info = feature[1].split(',')
-            hinshi = info[0]
-            if hinshi in ('名詞'):
-                hinshiList.append(["名詞",feature[0]])
-                if info[6]=="*":
-                    nounAndVerb.append(info[0])
-                else:
-                    nounAndVerb.append(info[6])
-            elif hinshi in ('動詞'): 
-                hinshiList.append(["動詞", feature[0]])
-            else:
-                hinshiList.append(["その他", feature[0]])
-    return hinshiList
-"""
-
 def get_noun(text,savefilename,hinshilist):
     #MeCabで形態素解析
     mecab = MeCab.Tagger('-Ochasen')
@@ -127,8 +89,7 @@ def get_noun(text,savefilename,hinshilist):
     
     #単語の数カウント
     c = collections.Counter(words)
-    word_count = c.most_common(100)
-    print(word_count)
+    word_count = c.most_common(100)#[('あと', 18), ('人', 12), ('スペシャル', 12),....]
     # 
     # fl = open("choiced_count_deta.csv", 'a', encoding="utf_8", newline="")
     # w = csv.writer(fl)
@@ -154,7 +115,7 @@ def get_noun(text,savefilename,hinshilist):
     files.close()
     # print(c.most_common(100))
  
-    return tt
+    return tt,word_count
 
 # https://toukei-lab.com/python-mecab
 # def tfidf(word_list):
@@ -167,6 +128,43 @@ def get_noun(text,savefilename,hinshilist):
 #     return vecs
 # def cossim(v1,v2):
 #     return np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
+
+# @lru_cache(maxsize=None)
+def get_pos(word):
+    parsed_lines = tagger.parse(word).split("\n")[:-2]
+    features = [l.split('\t')[1] for l in parsed_lines]
+    pos = [f.split(',')[0] for f in features]
+    pos1 = [f.split(',')[1] for f in features]
+
+    # 名詞の場合は、 品詞細分類1まで返す
+    if pos[0] == "名詞":
+        return f"{pos[0]}-{pos1[0]}"
+
+    # 名詞以外の場合は 品詞のみ返す
+    else:
+        return pos[0]
+        
+import matplotlib.cm as cm
+import matplotlib.colors as mcolors
+######################################
+# 頻出度で単語色を分ける
+######################################
+# # これが単語ごとに色を戻す関数
+# 品詞ごとに整数値を返す辞書を作る
+pos_color_index_dict = {}
+# カラーマップ指定
+cmap = cm.get_cmap("tab20")
+def pos_color_func(word, font_size, position, orientation, random_state=None,
+                   **kwargs):
+    # 品詞取得
+    pos = get_pos(word)
+    # 初登場の品詞の場合は辞書に追加
+    if pos not in pos_color_index_dict:
+        pos_color_index_dict[pos] = len(pos_color_index_dict)
+    color_index = pos_color_index_dict[pos]
+    # カラーマーップでrgbに変換
+    rgb = cmap(color_index)
+    return mcolors.rgb2hex(rgb)
 
 def create_word_cloud_for_file(CSVFILENAME):
     a = readCsv(CSVFILENAME+".csv")
@@ -191,30 +189,61 @@ def create_word_cloud_for_file(CSVFILENAME):
     wordcloud.to_file(CSVFILENAME+'PC.png') 
 
 def create_choiced_wordcloud(word_only_data, save_file_name, hinshilist):
-    
-    def ggg(word_only_data):#PCとUserにテキスト分割する
+    ######################################
+    # 3種（PC, USER, AndValue）のWordCloud生成
+    ######################################
+    def ggg(word_only_data):
         data = word_only_data
-        text = ""
-        text2 = ""
-        co = 0
-        # print(data)
-        # その列がUSERなら
+        tPC = "";tUSER = ""
+        
         for row in data:
-            # print(row[0])
-            if(row[0]=="USER"):
-                text = text+str(row[1])+" "
-                # textsum1 += int(row[5])
-            else:
-                text2 = text2+str(row[1])+" "
-        return text, text2
+            if(row[0]=="USER"):# その列がUSERなら
+                tUSER += str(row[1])+" "
+            else:# その列がPCなら
+                tPC += str(row[1])+" "
+        return tUSER, tPC
+    t = ggg(word_only_data)#PCとUserにテキスト分割する
+    PP = get_noun(t[0],save_file_name+'_co_USER.csv',hinshilist)
+    UU = get_noun(t[1],save_file_name+'_co_PC.csv',hinshilist)
+    teUSER = UU[0]#
+    tePC   = PP[0]
+    wordcountUSER = UU[1]
+    wordcountPC   = PP[1]#[('あと', 18), ('人', 12), ...  ]
+    wordcount_andvalue = {}
+    del_wordcount_PC = {}
+    del_wordcount_USERs = {}
+    print(type(wordcountPC))
 
-    # a = readCsv("./sr.csv")
-    a = ggg(word_only_data)
-    te=get_noun(a[0],save_file_name+'_co_USER.csv',hinshilist)
-    text2=get_noun(a[1],save_file_name+'_co_PC.csv',hinshilist)
+    # d = {'k1': 1, 'k2': 2}
+    # d['k3'] = 3
 
-    # vecs = tfidf(te)
-    # print(vecs[1],vecs[0])
+    for i, wspc in enumerate(wordcountPC):
+        # print(wspc)
+        for j, weuser in enumerate(wordcountUSER):
+            # print(weuser)
+            if wspc[1]>1 and weuser[1]>1 and wspc[0] == weuser[0]:#単語情報が一致かつ出現回数1以上なら
+                cc = int(wspc[1])+int(weuser[1])
+                wordcount_andvalue[wspc[0]] = cc
+                # print(wordcount_andvalue)
+            if wspc[1]>1 and weuser[1]>1 and wspc[0] != weuser[0]:#単語情報が一致かつ出現回数1以上なら:
+                del_wordcount_PC[wspc[0]] = int(wspc[1])
+                del_wordcount_USERs[weuser[0]] = int(weuser[1])
+    # new_data = {}
+    for key, value in wordcount_andvalue.items():
+        if key in del_wordcount_PC:
+            del del_wordcount_PC[key]
+    # new_data = {}
+    for key, value in wordcount_andvalue.items():
+        if key in del_wordcount_USERs:
+            del del_wordcount_USERs[key]
+            print(key)
+
+
+    # print(del_wordcount_PC)
+    # print(del_wordcount_USERs)
+    # print(wordcount_andvalue)
+
+    
     # Windowsにインストールされているフォントを指定 
     # 縦書きの削除　prefer_horizontal=1
     wordcloud = WordCloud(
@@ -226,16 +255,32 @@ def create_choiced_wordcloud(word_only_data, save_file_name, hinshilist):
                 background_color="white", 
                 prefer_horizontal=1,
                 colormap="summer"
-                )
+    )
     # wordcloud = WordCloud(width=1920, height=1080)
     # ワードクラウドの作成
     try:
-        wordcloud.generate(te)
+        wordcloud.generate(teUSER)
         wordcloud.to_file(VIEWLOG_DIR_PATH+'checed_USER.png') 
     except BaseException as e:
         print(e)
     try:
-        wordcloud.generate(text2)
+        wordcloud.generate(tePC)
+        wordcloud.to_file(VIEWLOG_DIR_PATH+'checed_PC.png') 
+    except BaseException as e:
+        print(e)
+    try:
+        wordcloud.fit_words(wordcount_andvalue)
+        wordcloud.to_file(VIEWLOG_DIR_PATH+'checed_AndValue.png') 
+    except BaseException as e:
+        print(e)
+    
+    try:
+        wordcloud.fit_words(del_wordcount_USERs)
+        wordcloud.to_file(VIEWLOG_DIR_PATH+'checed_USER.png') 
+    except BaseException as e:
+        print(e)
+    try:
+        wordcloud.fit_words(del_wordcount_PC)
         wordcloud.to_file(VIEWLOG_DIR_PATH+'checed_PC.png') 
     except BaseException as e:
         print(e)

@@ -6,10 +6,7 @@ from PIL import Image, ImageTk
 import tkinter.messagebox as mb
 import os
 
-
 import  csv_operate as csop
-
-
 
 DIR_NAME = "../speech_to_text_2121040"
 VIEWLOG_DIR_PATH = DIR_NAME+"/VIEWLOG_FILE/"#ログを保存する場所
@@ -24,6 +21,7 @@ if not os.path.exists(VIEWLOG_DIR_PATH):
 
 class Display_log():
     def __init__(self):
+        self.csv_data=""
         self.FILE_PATH =""
         self.root = tk.Tk() #tkinterでGUIを作成
         self.root.title('View Log') #GUIタイトル
@@ -61,25 +59,37 @@ class Display_log():
         # PC側のFrame
         ##################
         frame_imgPC = tk.Frame(self.root, borderwidth = 2, relief = tk.FLAT)
-        label = ttk.Label(text="PC")
-        label.pack(in_= frame_imgPC ,side = tk.TOP)
+        self.labelPC = ttk.Label(text="PC")
+        self.labelPC.pack(in_= frame_imgPC ,side = tk.TOP)
         self.canvasPC=tk.Canvas()
         self.canvasPC.pack(in_= frame_imgPC ,side = tk.TOP)
         ##################
         # USER側のFrame
         ##################
         frame_imgUSER = tk.Frame(borderwidth = 2, relief = tk.FLAT)
-        label = ttk.Label(text="USER")
-        label.pack(in_= frame_imgUSER ,side = tk.TOP)        
+        self.labelUSER = ttk.Label(text="USER")
+        self.labelUSER.pack(in_= frame_imgUSER ,side = tk.TOP)        
         # canvasUSER=tk.Canvas(width=640,height=426,bd=0, highlightthickness=0, relief='ridge')
         self.canvasUSER=tk.Canvas()
         self.canvasUSER.pack(in_= frame_imgUSER ,side = tk.TOP)
+
+        ##################
+        # andVlueのFrame
+        ##################
+        frame_imgAndValue = tk.Frame(self.root, borderwidth = 2, relief = tk.FLAT)
+        label = ttk.Label(text="andVlue")
+        label.pack(in_= frame_imgAndValue ,side = tk.TOP)
+        self.canvasAndValue=tk.Canvas()
+        self.canvasAndValue.pack(in_= frame_imgAndValue ,side = tk.TOP)
+
         
         # 特定のIMGを取得してキャンバスに描画
         self._img_show()
         frame_button.pack(side = tk.LEFT)
         frame_imgPC.pack(side = tk.LEFT, expand=True)
+        frame_imgAndValue.pack(side = tk.LEFT, expand=True)
         frame_imgUSER.pack(side = tk.LEFT, expand=True)
+
         # ##########################################
         # ファイル名取得後CSVファイルの読み込み
         # ##########################################
@@ -95,19 +105,27 @@ class Display_log():
             img = Image.open(VIEWLOG_DIR_PATH+'checed_PC.png')
             img = img.resize(( imgsize, imgsize ))
             img.save(VIEWLOG_DIR_PATH+'checked_resizePC.png')
+            
             img = Image.open(VIEWLOG_DIR_PATH+'checed_USER.png')
             img = img.resize(( imgsize, imgsize ))
             img.save(VIEWLOG_DIR_PATH+'checed_resizeUSER.png')
 
+            img = Image.open(VIEWLOG_DIR_PATH+'checed_AndValue.png')
+            img = img.resize(( imgsize, imgsize ))
+            img.save(VIEWLOG_DIR_PATH+'checed_resizeAndValue.png')
+
             imgUSER = tk.PhotoImage(file=VIEWLOG_DIR_PATH+'checed_resizeUSER.png')
             imgPC = tk.PhotoImage(file=VIEWLOG_DIR_PATH+'checked_resizePC.png')
+            imgAndValue = tk.PhotoImage(file=VIEWLOG_DIR_PATH+'checed_resizeAndValue.png')
 
             self.canvasPC.delete('p1')
             self.canvasUSER.delete('p1')
+            self.canvasAndValue.delete('p1')
 
             # キャンバスに画像を表示する       
             self.canvasUSER.create_image(105,10,image=imgUSER,tag='p1', anchor = tk.NW)
             self.canvasPC.create_image(105,10,image=imgPC,tag='p1', anchor = tk.NW)
+            self.canvasAndValue.create_image(105,10,image=imgAndValue,tag='p1', anchor = tk.NW)
 
         except BaseException as e:
             print(e)
@@ -173,7 +191,10 @@ class Display_log():
         for col in dd:
             self.listbox2.insert(tk.END, col)
             # self.listbox2.config()
+        self.labelUSER.config(text="USER"+str(self.csv_data.USER_amout))
+        self.labelPC.config(text="PC"+str(self.csv_data.PC_amout))
         self.csv_data.re_init(self.FILE_PATH)
+        
             
     def view_log(self):
         abstract_list = [DAY, HINSHI] #抽象的なリスト

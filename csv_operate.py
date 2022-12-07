@@ -70,6 +70,9 @@ class read_csv():
         cw.create_choiced_wordcloud(word_only_data,save_file_name,hinshilist)
         return self.result_data
 
+    ######################################
+    # checkboxで選択された行のみ抽出する
+    ######################################
     def compar_list(self, list,save_file_name):
 
         choiced_day = set(list) & set(self.day)
