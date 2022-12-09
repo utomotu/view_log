@@ -5,6 +5,8 @@ import csv
 import MeCab
 import collections
 
+from PIL import Image
+
 # import numpy as np
 # from sklearn.feature_extraction.text import TfidfVectorizer
 
@@ -188,30 +190,32 @@ def create_word_cloud_for_file(CSVFILENAME):
     # wordcloud.to_file('./wc2.png') 
     wordcloud.to_file(CSVFILENAME+'PC.png') 
 
-def create_choiced_wordcloud(word_only_data, save_file_name, hinshilist):
+def create_choiced_wordcloud(word_only_data, save_file_name, hinshilist,switch_view):
     ######################################
     # 3種（PC, USER, AndValue）のWordCloud生成
     ######################################
     def ggg(word_only_data):
         data = word_only_data
-        tPC = "";tUSER = ""
+        tPC = "";tUSER = "";tAll=""
         
         for row in data:
             if(row[0]=="USER"):# その列がUSERなら
                 tUSER += str(row[1])+" "
+                tAll +=  str(row[1])+" "
             else:# その列がPCなら
                 tPC += str(row[1])+" "
-        return tUSER, tPC
+                tAll +=  str(row[1])+" "
+        return tUSER, tPC, tAll
     t = ggg(word_only_data)#PCとUserにテキスト分割する
     PP = get_noun(t[0],save_file_name+'_co_USER.csv',hinshilist)
     UU = get_noun(t[1],save_file_name+'_co_PC.csv',hinshilist)
-    teUSER = UU[0]#
+    ALL = get_noun(t[2],save_file_name+'_co_ALL.csv',hinshilist)
+    teUSER = UU[0] #
     tePC   = PP[0]
     wordcountUSER = UU[1]
     wordcountPC   = PP[1]#[('あと', 18), ('人', 12), ...  ]
-    wordcount_andvalue = {}
-    del_wordcount_PC = {}
-    del_wordcount_USERs = {}
+
+    wordcount_andvalue = {};del_wordcount_PC = {};del_wordcount_USERs = {}
     print(type(wordcountPC))
 
     # d = {'k1': 1, 'k2': 2}
@@ -258,29 +262,45 @@ def create_choiced_wordcloud(word_only_data, save_file_name, hinshilist):
     )
     # wordcloud = WordCloud(width=1920, height=1080)
     # ワードクラウドの作成
+    wws = 500
     try:
         wordcloud.generate(teUSER)
         wordcloud.to_file(VIEWLOG_DIR_PATH+'checed_USER.png') 
     except BaseException as e:
+        img = Image.new("L", (wws, wws), 255)
+        img.save(VIEWLOG_DIR_PATH+'checed_USER.png')
+        
         print(e)
     try:
         wordcloud.generate(tePC)
         wordcloud.to_file(VIEWLOG_DIR_PATH+'checed_PC.png') 
     except BaseException as e:
+        img = Image.new("L", (wws, wws), 255)
+        img.save(VIEWLOG_DIR_PATH+'checed_PC.png')
+        
         print(e)
     try:
         wordcloud.fit_words(wordcount_andvalue)
         wordcloud.to_file(VIEWLOG_DIR_PATH+'checed_AndValue.png') 
     except BaseException as e:
+        # 何も生成されない時は
+        img = Image.new("L", (wws, wws), 255)
+        img.save(VIEWLOG_DIR_PATH+'checed_AndValue.png')
         print(e)
-    
-    try:
-        wordcloud.fit_words(del_wordcount_USERs)
-        wordcloud.to_file(VIEWLOG_DIR_PATH+'checed_USER.png') 
-    except BaseException as e:
-        print(e)
-    try:
-        wordcloud.fit_words(del_wordcount_PC)
-        wordcloud.to_file(VIEWLOG_DIR_PATH+'checed_PC.png') 
-    except BaseException as e:
-        print(e)
+    if switch_view:
+        try:
+            wordcloud.fit_words(del_wordcount_USERs)
+            wordcloud.to_file(VIEWLOG_DIR_PATH+'checed_USER.png') 
+        except BaseException as e:
+            img = Image.new("L", (wws, wws), 255)
+            img.save(VIEWLOG_DIR_PATH+'checed_USER.png')
+            print(e)
+        try:
+            wordcloud.fit_words(del_wordcount_PC)
+            wordcloud.to_file(VIEWLOG_DIR_PATH+'checed_PC.png') 
+        except BaseException as e:
+            img = Image.new("L", (wws, wws), 255)
+            img.save(VIEWLOG_DIR_PATH+'checed_PC.png')
+            
+            print(e)
+    return ALL

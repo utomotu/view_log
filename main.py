@@ -21,7 +21,7 @@ if not os.path.exists(VIEWLOG_DIR_PATH):
 
 class Display_log():
     def __init__(self):
-        self.csv_data=""
+        self.csv_data:csop
         self.FILE_PATH =""
         self.root = tk.Tk() #tkinterでGUIを作成
         self.root.title('View Log') #GUIタイトル
@@ -32,7 +32,7 @@ class Display_log():
         
         width00 = int(screenWidth/6);width01 = int(screenWidth-width00)
         height00 = int(screenHeight/3);height01 = int(screenHeight-height00)
-        heightline = 17#チェックボックスとテキストボックスの行数# print(width00,width01,height00,height01)
+        heightline = 15#チェックボックスとテキストボックスの行数# print(width00,width01,height00,height01)
         # ##############
         # packと仲良くなろう https://imagingsolution.net/program/python/tkinter/widget_layout_pack/
         # ##############
@@ -49,16 +49,43 @@ class Display_log():
         ##################
         # ButtonFRRAME：ボタンをフレームに入れて横並びで配置
         ##################
-        frame_button = tk.Frame(self.root, borderwidth = 2, relief = tk.FLAT, pady=5, padx=5,width=width01)
+        frame_button = tk.Frame(self.root, borderwidth = 2, relief = tk.FLAT)
+        ffbwidth = 10
+        self.swith_value: bool = False
+        ffb = tk.Frame(self.root, borderwidth = 2, relief = tk.FLAT, pady=5, padx=5,width=ffbwidth)
         select_checkbox_button = ttk.Button(text="選択確認", command=lambda:[self._treebox_check(),self._img_show()])
         select_file_button = ttk.Button(text="ファイル選択", command=lambda:[self._select_full_log()])
+        select_switch = ttk.Button(text="抜き取りOFF", command=lambda:[click()])
+        def click():
+            if self.swith_value:
+                select_switch.config(text='抜き取りOFF')
+                self.swith_value = not self.swith_value
+                
+            else:
+                select_switch.config(text='抜き取りON')
+                self.swith_value = not self.swith_value
+        
+        select_checkbox_button.pack(in_= ffb,side = tk.LEFT, expand=True)
+        select_file_button.pack(in_= ffb,side = tk.LEFT, expand=True)
+        select_switch.pack(in_= ffb,side = tk.LEFT, expand=True)
+    
+        ffbb = tk.Frame(self.root, borderwidth = 2, relief = tk.FLAT, pady=5, padx=5,width=ffbwidth)
+        
+        self.entry1 = ttk.Entry(width=8)
+        word_button = ttk.Button(text="単語検索", command=lambda:[self._select_full_log()])
+        self.entry1.pack(in_=ffbb, side=tk.LEFT, anchor="w", padx=4, pady=4, expand=True)
+        word_button.pack(in_= ffbb,side = tk.LEFT, expand=True)
+        
+        self.wordlistbox = tk.Listbox(height=heightline,width=25)
+        
+        ffb.pack(in_= frame_button,side = tk.TOP)#ボタン横並び
+        ffbb.pack(in_= frame_button,side = tk.TOP)#ボタン横並び
+        self.wordlistbox.pack(in_= frame_button, side = tk.TOP,ipadx = 30, ipady = 11)
 
-        select_checkbox_button.pack(in_= frame_button,side = tk.RIGHT, expand=True)
-        select_file_button.pack(in_= frame_button,side = tk.RIGHT, expand=True)
         ##################
         # PC側のFrame
         ##################
-        frame_imgPC = tk.Frame(self.root, borderwidth = 2, relief = tk.FLAT)
+        frame_imgPC = tk.Frame(relief = tk.FLAT)
         self.labelPC = ttk.Label(text="PC")
         self.labelPC.pack(in_= frame_imgPC ,side = tk.TOP)
         self.canvasPC=tk.Canvas()
@@ -66,29 +93,31 @@ class Display_log():
         ##################
         # USER側のFrame
         ##################
-        frame_imgUSER = tk.Frame(borderwidth = 2, relief = tk.FLAT)
+        frame_imgUSER = tk.Frame(relief = tk.FLAT)
         self.labelUSER = ttk.Label(text="USER")
         self.labelUSER.pack(in_= frame_imgUSER ,side = tk.TOP)        
         # canvasUSER=tk.Canvas(width=640,height=426,bd=0, highlightthickness=0, relief='ridge')
-        self.canvasUSER=tk.Canvas()
+        self.canvasUSER=tk.Canvas(relief= tk.RAISED)
         self.canvasUSER.pack(in_= frame_imgUSER ,side = tk.TOP)
 
         ##################
         # andVlueのFrame
         ##################
-        frame_imgAndValue = tk.Frame(self.root, borderwidth = 2, relief = tk.FLAT)
+        frame_imgAndValue = tk.Frame(relief =tk.RIDGE)
         label = ttk.Label(text="andVlue")
         label.pack(in_= frame_imgAndValue ,side = tk.TOP)
-        self.canvasAndValue=tk.Canvas()
+        self.canvasAndValue=tk.Canvas(relief= tk.RAISED)
         self.canvasAndValue.pack(in_= frame_imgAndValue ,side = tk.TOP)
 
         
         # 特定のIMGを取得してキャンバスに描画
         self._img_show()
-        frame_button.pack(side = tk.LEFT)
-        frame_imgPC.pack(side = tk.LEFT, expand=True)
-        frame_imgAndValue.pack(side = tk.LEFT, expand=True)
-        frame_imgUSER.pack(side = tk.LEFT, expand=True)
+        frame_button.pack(in_= self.root,side = tk.LEFT, expand=True)
+        frame_imgPC.pack(in_= self.root,side = tk.LEFT, expand=True)
+        frame_imgAndValue.pack(in_= self.root,side = tk.LEFT, expand=True)
+        frame_imgUSER.pack(in_= self.root, side = tk.LEFT, expand=True)
+
+        # ffpack.pack(side = tk.LEFT, expand=True)
 
         # ##########################################
         # ファイル名取得後CSVファイルの読み込み
@@ -101,7 +130,7 @@ class Display_log():
     def _img_show(self):
         try:   
             # 画像を指定              
-            imgsize = int(200)                                                    
+            imgsize = int(250)                                                    
             img = Image.open(VIEWLOG_DIR_PATH+'checed_PC.png')
             img = img.resize(( imgsize, imgsize ))
             img.save(VIEWLOG_DIR_PATH+'checked_resizePC.png')
@@ -123,9 +152,9 @@ class Display_log():
             self.canvasAndValue.delete('p1')
 
             # キャンバスに画像を表示する       
-            self.canvasUSER.create_image(105,10,image=imgUSER,tag='p1', anchor = tk.NW)
-            self.canvasPC.create_image(105,10,image=imgPC,tag='p1', anchor = tk.NW)
-            self.canvasAndValue.create_image(105,10,image=imgAndValue,tag='p1', anchor = tk.NW)
+            self.canvasUSER.create_image(10,10,image=imgUSER,tag='p1', anchor = tk.NW)
+            self.canvasPC.create_image(10,10,image=imgPC,tag='p1', anchor = tk.NW)
+            self.canvasAndValue.create_image(10,10,image=imgAndValue,tag='p1', anchor = tk.NW)
 
         except BaseException as e:
             print(e)
@@ -148,7 +177,7 @@ class Display_log():
             try:
                 print("true")         
                 # CSVデータ格納用クラス変数に代入する．ボタン選択でも実行可能なようにする
-                self.csv_data=csop.read_csv(self.FILE_PATH)
+                self.csv_data=csop.read_csv(self.FILE_PATH,self.swith_value)
                 ##################
                 # 過去ログの表示
                 ##################
@@ -184,6 +213,7 @@ class Display_log():
         # return self.FILE_PATH
     
     def _treebox_check(self):
+        self.csv_data.set_swith_value(self.swith_value)#スイッチバリューを反映させておく
         path = (os.path.basename(self.FILE_PATH))
         filename, fileext = os.path.splitext(os.path.basename(path))
         dd = self.csv_data.compar_list(self.ct_area.get_checked(), DIR_NAME+filename)
@@ -191,10 +221,14 @@ class Display_log():
         for col in dd:
             self.listbox2.insert(tk.END, col)
             # self.listbox2.config()
-        self.labelUSER.config(text="USER"+str(self.csv_data.USER_amout))
-        self.labelPC.config(text="PC"+str(self.csv_data.PC_amout))
+        self.labelUSER.config(text="USER:"+str(self.csv_data.USER_amout))
+        self.labelPC.config(text="PC:"+str(self.csv_data.PC_amout))
         self.csv_data.re_init(self.FILE_PATH)
+        mmww = self.csv_data.get_mono_word_listy()
         
+        for i, wspc in enumerate(mmww):
+            # self.wordlistbox.insert(tk.END, wspc[0])
+            print(wspc[0])
             
     def view_log(self):
         abstract_list = [DAY, HINSHI] #抽象的なリスト

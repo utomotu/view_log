@@ -12,8 +12,8 @@ from janome.tokenizer import Tokenizer
 import pandas as pd
 import create_wordcloud as cw
 
-hinshi_list = ["その他", "感動詞", "記号", "形容詞", "名詞", "助詞", "助動詞", "接続詞", "接頭詞", "動詞", "副詞", "連体詞"] #抽象的なリストの「漫画」の具体例
-# hinshi_list = ["その他", "感動詞", "記号", "形容詞", "名詞",] #抽象的なリストの「漫画」の具体例
+# hinshi_list = ["その他", "感動詞", "記号", "形容詞", "名詞", "助詞", "助動詞", "接続詞", "接頭詞", "動詞", "副詞", "連体詞"] #抽象的なリストの「漫画」の具体例
+hinshi_list = ["感動詞",  "形容詞", "名詞", "動詞", "副詞", "連体詞"] #抽象的なリストの「漫画」の具体例
 
 def addwriteCsv(date, time, contents, openFileName = "csvTes.csv"):
     file = open(openFileName, 'a', newline="")
@@ -22,7 +22,8 @@ def addwriteCsv(date, time, contents, openFileName = "csvTes.csv"):
     file.close()
 
 class read_csv():
-    def __init__(self, filename):   
+    def __init__(self, filename, swith_value):   
+        self.swith_value = swith_value# 切り替え用ワードクラウドの単語抜き取りをするか否かの
         self.result_data = []
         self.full_data =[]#CSVのfullデータ
 
@@ -40,6 +41,7 @@ class read_csv():
         self.fileext = fileext
         # 読み込んでself.day,  self.windowOB ,self.speakerに重複無しデータの挿入
         self.readCsv(self.filepath)
+        self.mono_word_list = {}
     def re_init(self, filename):
         self.result_data = []
         self.full_data =[]#CSVのfullデータ
@@ -67,7 +69,7 @@ class read_csv():
             # if(row[3]!=""):
             self.result_data.append(row[1][:5]+":"+row[6]+":"+row[3])
             word_only_data.append([row[6],row[3]])
-        cw.create_choiced_wordcloud(word_only_data,save_file_name,hinshilist)
+        self.mono_word_list=cw.create_choiced_wordcloud(word_only_data,save_file_name,hinshilist)
         return self.result_data
 
     ######################################
@@ -126,10 +128,13 @@ class read_csv():
         print("choiced_PCword_amount:"+str(self.PC_amout))
         print("choiced_USERword_amount:"+str(self.USER_amout))
         
-        cw.create_choiced_wordcloud(word_only_data,save_file_name, choiced_hinshi)
+        self.mono_word_list = cw.create_choiced_wordcloud(word_only_data,save_file_name, choiced_hinshi, self.swith_value)
+        # print(self.mono_word_list)
         
         return self.result_data
-
+    
+    def get_mono_word_listy(self):
+        return self.mono_word_list
     def get_day(self):
         return self.day
     def get_windowOB(self):
@@ -138,6 +143,8 @@ class read_csv():
         return self.speaker
     def get_result_data(self):
         return self.result_data
+    def set_swith_value(self, swith_value):
+        self.swith_value = bool(swith_value)
 
     def readCsv(self, openFileName):
         
@@ -171,6 +178,7 @@ class read_csv():
         dbc()   
 
     # 分かち書きを入手 
+    
     def mecab_owakati(self):
         # 分かち書きのみ出力する設定にする
         # mecab = MeCab.Tagger("-Ochasen")
@@ -206,7 +214,7 @@ class read_csv():
         print('---------------')
         print(df.T.sort_values(by=1,ascending=False)[1])
             
-  
-# readCsv("2022-10-26.csv")
-# b = read_csv("full_log/2022-10-26_zemi.csv")
-# b.mecab_owakati()
+    
+        # readCsv("2022-10-26.csv")
+        # b = read_csv("full_log/2022-10-26_zemi.csv")
+        # b.mecab_owakati()
