@@ -5,6 +5,7 @@ from ttkwidgets import CheckboxTreeview #pip install ttkwidgetsでインスト�
 from PIL import Image, ImageTk
 import tkinter.messagebox as mb
 import os
+import tkinter.font as tkFont
 
 import  csv_operate as csop
 
@@ -50,12 +51,13 @@ class Display_log():
         # ButtonFRRAME：ボタンをフレームに入れて横並びで配置
         ##################
         frame_button = tk.Frame(self.root, borderwidth = 2, relief = tk.FLAT)
-        ffbwidth = 10
+        ffbwidth = 9
         self.swith_value: bool = False
         ffb = tk.Frame(self.root, borderwidth = 2, relief = tk.FLAT, pady=5, padx=5,width=ffbwidth)
         select_checkbox_button = ttk.Button(text="選択確認", command=lambda:[self._treebox_check(),self._img_show()])
         select_file_button = ttk.Button(text="ファイル選択", command=lambda:[self._select_full_log()])
         select_switch = ttk.Button(text="抜き取りOFF", command=lambda:[click()])
+
         def click():
             if self.swith_value:
                 select_switch.config(text='抜き取りOFF')
@@ -72,7 +74,7 @@ class Display_log():
         ffbb = tk.Frame(self.root, borderwidth = 2, relief = tk.FLAT, pady=5, padx=5,width=ffbwidth)
         
         self.entry1 = ttk.Entry(width=8)
-        word_button = ttk.Button(text="単語検索", command=lambda:[self._select_full_log()])
+        word_button = ttk.Button(text="単語検索", command=lambda:[self._resarch_word()])
         self.entry1.pack(in_=ffbb, side=tk.LEFT, anchor="w", padx=4, pady=4, expand=True)
         word_button.pack(in_= ffbb,side = tk.LEFT, expand=True)
         
@@ -82,32 +84,40 @@ class Display_log():
         ffbb.pack(in_= frame_button,side = tk.TOP)#ボタン横並び
         self.wordlistbox.pack(in_= frame_button, side = tk.TOP,ipadx = 30, ipady = 11)
 
+        fontsize= 15
         ##################
         # PC側のFrame
         ##################
         frame_imgPC = tk.Frame(relief = tk.FLAT)
-        self.labelPC = ttk.Label(text="PC")
-        self.labelPC.pack(in_= frame_imgPC ,side = tk.TOP)
+        lPC = ttk.Label(text="PC音声から収集した単語", font=tkFont.Font(size = fontsize))
+        lPC.pack(in_= frame_imgPC ,side = tk.TOP)
         self.canvasPC=tk.Canvas()
         self.canvasPC.pack(in_= frame_imgPC ,side = tk.TOP)
+        self.labelPC = ttk.Label(text="認識文字数:", font=tkFont.Font(size = fontsize))
+        self.labelPC.pack(in_= frame_imgPC ,side = tk.TOP)
         ##################
         # USER側のFrame
         ##################
         frame_imgUSER = tk.Frame(relief = tk.FLAT)
-        self.labelUSER = ttk.Label(text="USER")
-        self.labelUSER.pack(in_= frame_imgUSER ,side = tk.TOP)        
+        self.lUSER = ttk.Label(text="ユーザ発話から収集した単語",font=tkFont.Font(size = fontsize))
+        self.lUSER.pack(in_= frame_imgUSER ,side = tk.TOP) 
         # canvasUSER=tk.Canvas(width=640,height=426,bd=0, highlightthickness=0, relief='ridge')
         self.canvasUSER=tk.Canvas(relief= tk.RAISED)
         self.canvasUSER.pack(in_= frame_imgUSER ,side = tk.TOP)
+        self.labelUSER = ttk.Label(text="認識文字数:",font=tkFont.Font(size = fontsize))
+        self.labelUSER.pack(in_= frame_imgUSER ,side = tk.TOP)        
 
         ##################
         # andVlueのFrame
         ##################
         frame_imgAndValue = tk.Frame(relief =tk.RIDGE)
-        label = ttk.Label(text="andVlue")
+        label = ttk.Label(text="PC/ユーザ発話の合致単語",font=tkFont.Font(size = fontsize))
         label.pack(in_= frame_imgAndValue ,side = tk.TOP)
         self.canvasAndValue=tk.Canvas(relief= tk.RAISED)
         self.canvasAndValue.pack(in_= frame_imgAndValue ,side = tk.TOP)
+        label = ttk.Label(text="  ",font=tkFont.Font(size = fontsize))
+        label.pack(in_= frame_imgAndValue,side = tk.TOP)        
+
 
         
         # 特定のIMGを取得してキャンバスに描画
@@ -117,8 +127,6 @@ class Display_log():
         frame_imgAndValue.pack(in_= self.root,side = tk.LEFT, expand=True)
         frame_imgUSER.pack(in_= self.root, side = tk.LEFT, expand=True)
 
-        # ffpack.pack(side = tk.LEFT, expand=True)
-
         # ##########################################
         # ファイル名取得後CSVファイルの読み込み
         # ##########################################
@@ -126,6 +134,7 @@ class Display_log():
         self.view_log()
 
         self.root.mainloop()
+        
     
     def _img_show(self):
         try:   
@@ -221,19 +230,31 @@ class Display_log():
         for col in dd:
             self.listbox2.insert(tk.END, col)
             # self.listbox2.config()
-        self.labelUSER.config(text="USER:"+str(self.csv_data.USER_amout))
-        self.labelPC.config(text="PC:"+str(self.csv_data.PC_amout))
+        self.labelUSER.config(text="認識文字数:"+str(self.csv_data.USER_amout))
+        self.labelPC.config(text="認識文字数:"+str(self.csv_data.PC_amout))
         self.csv_data.re_init(self.FILE_PATH)
         mmww = self.csv_data.get_mono_word_listy()
         
         for i, wspc in enumerate(mmww):
             # self.wordlistbox.insert(tk.END, wspc[0])
             print(wspc[0])
-            
+    def _resarch_word(self):
+        resarch_word = self.entry1.get()
+        #列番号を元に更新する
+        cc = 0 
+        dd = self.csv_data.get_result_data()
+        for i,text in enumerate(dd):
+            if resarch_word in text:
+                self.listbox2.itemconfig(int(i), {'bg': '#f0e68c'})
+                cc+=0
+                
+
+        
+                            
     def view_log(self):
         abstract_list = [DAY, HINSHI] #抽象的なリスト
         book_list =self.csv_data.get_day()
-        hinshi_list = ["その他", "感動詞", "記号", "形容詞", "名詞", "助詞", "助動詞", "接続詞", "接頭詞", "動詞", "副詞", "連体詞"] #抽象的なリストの「漫画」の具体例
+        hinshi_list = ["感動詞", "形容詞", "名詞", "接続詞", "動詞", "副詞", "連体詞"] #抽象的なリストの「漫画」の具体例
         # hinshi_list = ["その他", "感動詞", "記号", "形容詞", "名詞", "助詞", "助動詞", "接続詞", "接頭詞", "動詞", "副詞", "連体詞"] #抽象的なリストの「漫画」の具体例
         try:
             self.ct_area.delete(DAY)

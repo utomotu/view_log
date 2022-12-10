@@ -207,8 +207,8 @@ def create_choiced_wordcloud(word_only_data, save_file_name, hinshilist,switch_v
                 tAll +=  str(row[1])+" "
         return tUSER, tPC, tAll
     t = ggg(word_only_data)#PCとUserにテキスト分割する
-    PP = get_noun(t[0],save_file_name+'_co_USER.csv',hinshilist)
-    UU = get_noun(t[1],save_file_name+'_co_PC.csv',hinshilist)
+    UU = get_noun(t[0],save_file_name+'_co_USER.csv',hinshilist)
+    PP = get_noun(t[1],save_file_name+'_co_PC.csv',hinshilist)
     ALL = get_noun(t[2],save_file_name+'_co_ALL.csv',hinshilist)
     teUSER = UU[0] #
     tePC   = PP[0]
