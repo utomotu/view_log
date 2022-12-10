@@ -234,9 +234,9 @@ class Display_log():
         self.labelPC.config(text="認識文字数:"+str(self.csv_data.PC_amout))
         self.csv_data.re_init(self.FILE_PATH)
         mmww = self.csv_data.get_mono_word_listy()
-        
-        for i, wspc in enumerate(mmww):
-            # self.wordlistbox.insert(tk.END, wspc[0])
+        # print(mmww)
+        for wspc in mmww[1]:
+            self.wordlistbox.insert(tk.END, wspc[0])
             print(wspc[0])
     def _resarch_word(self):
         resarch_word = self.entry1.get()
@@ -247,8 +247,7 @@ class Display_log():
             if resarch_word in text:
                 self.listbox2.itemconfig(int(i), {'bg': '#f0e68c'})
                 cc+=0
-                
-
+    
         
                             
     def view_log(self):

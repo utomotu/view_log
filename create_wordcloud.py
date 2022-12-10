@@ -210,16 +210,17 @@ def create_choiced_wordcloud(word_only_data, save_file_name, hinshilist,switch_v
     UU = get_noun(t[0],save_file_name+'_co_USER.csv',hinshilist)
     PP = get_noun(t[1],save_file_name+'_co_PC.csv',hinshilist)
     ALL = get_noun(t[2],save_file_name+'_co_ALL.csv',hinshilist)
+    
+    # print(ALL)
     teUSER = UU[0] #
     tePC   = PP[0]
     wordcountUSER = UU[1]
     wordcountPC   = PP[1]#[('あと', 18), ('人', 12), ...  ]
 
     wordcount_andvalue = {};del_wordcount_PC = {};del_wordcount_USERs = {}
-    print(type(wordcountPC))
-
-    # d = {'k1': 1, 'k2': 2}
-    # d['k3'] = 3
+    print(ALL[1])
+    # for i, wspc in enumerate(ALL[1]):
+        # print(wspc)
 
     for i, wspc in enumerate(wordcountPC):
         # print(wspc)
@@ -232,15 +233,16 @@ def create_choiced_wordcloud(word_only_data, save_file_name, hinshilist,switch_v
             if wspc[1]>1 and weuser[1]>1 and wspc[0] != weuser[0]:#単語情報が一致かつ出現回数1以上なら:
                 del_wordcount_PC[wspc[0]] = int(wspc[1])
                 del_wordcount_USERs[weuser[0]] = int(weuser[1])
-    # new_data = {}
+
+    #　合致する単語はPC,USERからそれぞれ抜き取りを行う
     for key, value in wordcount_andvalue.items():
         if key in del_wordcount_PC:
             del del_wordcount_PC[key]
-    # new_data = {}
+
     for key, value in wordcount_andvalue.items():
         if key in del_wordcount_USERs:
             del del_wordcount_USERs[key]
-            print(key)
+            # print(key)
 
 
     # print(del_wordcount_PC)
