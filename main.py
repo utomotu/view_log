@@ -85,37 +85,38 @@ class Display_log():
         self.wordlistbox.pack(in_= frame_button, side = tk.TOP,ipadx = 30, ipady = 11)
 
         fontsize= 15
+        viewfont = tkFont.Font(size = fontsize, weight = "bold")
         ##################
         # PC側のFrame
         ##################
         frame_imgPC = tk.Frame(relief = tk.FLAT)
-        lPC = ttk.Label(text="PC音声から収集した単語", font=tkFont.Font(size = fontsize))
+        lPC = ttk.Label(text="PC音声", font=viewfont)
         lPC.pack(in_= frame_imgPC ,side = tk.TOP)
         self.canvasPC=tk.Canvas()
         self.canvasPC.pack(in_= frame_imgPC ,side = tk.TOP)
-        self.labelPC = ttk.Label(text="認識文字数:", font=tkFont.Font(size = fontsize))
+        self.labelPC = ttk.Label(text=":", font=viewfont)
         self.labelPC.pack(in_= frame_imgPC ,side = tk.TOP)
         ##################
         # USER側のFrame
         ##################
         frame_imgUSER = tk.Frame(relief = tk.FLAT)
-        self.lUSER = ttk.Label(text="ユーザ発話から収集した単語",font=tkFont.Font(size = fontsize))
+        self.lUSER = ttk.Label(text="ユーザ発話",font=viewfont)
         self.lUSER.pack(in_= frame_imgUSER ,side = tk.TOP) 
         # canvasUSER=tk.Canvas(width=640,height=426,bd=0, highlightthickness=0, relief='ridge')
         self.canvasUSER=tk.Canvas(relief= tk.RAISED)
         self.canvasUSER.pack(in_= frame_imgUSER ,side = tk.TOP)
-        self.labelUSER = ttk.Label(text="認識文字数:",font=tkFont.Font(size = fontsize))
+        self.labelUSER = ttk.Label(text=":",font=viewfont)
         self.labelUSER.pack(in_= frame_imgUSER ,side = tk.TOP)        
 
         ##################
         # andVlueのFrame
         ##################
         frame_imgAndValue = tk.Frame(relief =tk.RIDGE)
-        label = ttk.Label(text="PC/ユーザ発話の合致単語",font=tkFont.Font(size = fontsize))
+        label = ttk.Label(text="共通単語",font=viewfont)
         label.pack(in_= frame_imgAndValue ,side = tk.TOP)
         self.canvasAndValue=tk.Canvas(relief= tk.RAISED)
         self.canvasAndValue.pack(in_= frame_imgAndValue ,side = tk.TOP)
-        label = ttk.Label(text="  ",font=tkFont.Font(size = fontsize))
+        label = ttk.Label(text="  ",font=viewfont)
         label.pack(in_= frame_imgAndValue,side = tk.TOP)        
 
 
@@ -230,8 +231,8 @@ class Display_log():
         for col in dd:
             self.listbox2.insert(tk.END, col)
             # self.listbox2.config()
-        self.labelUSER.config(text="認識文字数:"+str(self.csv_data.USER_amout))
-        self.labelPC.config(text="認識文字数:"+str(self.csv_data.PC_amout))
+        self.labelUSER.config(text=str(self.csv_data.USER_amout)+"字")
+        self.labelPC.config(text=str(self.csv_data.PC_amout)+"字")
         self.csv_data.re_init(self.FILE_PATH)
         mmww = self.csv_data.get_mono_word_listy()
         # print(mmww)
