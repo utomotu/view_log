@@ -26,6 +26,7 @@ class read_csv():
         self.swith_value = swith_value# 切り替え用ワードクラウドの単語抜き取りをするか否かの
         self.result_data = []
         self.full_data =[]#CSVのfullデータ
+        self.data_name = ""
 
         self.day = [] # fullデータのうち日付のみのデータ（重複無し）
         self.windowOB = []## fullデータのうちwindoeのみのデータ（重複無し）
@@ -159,21 +160,26 @@ class read_csv():
 
         file = open(openFileName, 'r', encoding="utf_8")
         data = csv.reader(file)
-        for row in data:
-            self.full_data.append(row)
-            try:
-                if(row[3]!=""):
-                    self.result_data.append(row[1][:5]+":"+row[6]+":"+row[3])
-                    # テキストボックス用FULLデータの挿入
-            except BaseException as e:
-                print(e)
-            for i, col in enumerate(row):
-                if i == 1:#日付
-                    self.day.append(col[:2])
-                if i == 6:#発話内容
-                    self.speaker.append(col)
-                if i == 7:#WINDOW名
-                    self.windowOB.append(col)
+        for j, row in enumerate(data):
+            if j==0:
+                print("self.fulldatajjj")
+                self.data_name = row
+            else:
+                self.full_data.append(row)   
+                try:
+                    if(row[3]!=""):
+                        self.result_data.append(row[1][:5]+":"+row[6]+":"+row[3])
+                        # テキストボックス用FULLデータの挿入
+                except BaseException as e:
+                    print(e)
+                    print("self.fulldata"+row)
+                for i, col in enumerate(row):
+                    if i == 1:#日付
+                        self.day.append(col[:2])
+                    if i == 6:#発話内容
+                        self.speaker.append(col)
+                    if i == 7:#WINDOW名
+                        self.windowOB.append(col)
         file.close()
         dbc()   
 

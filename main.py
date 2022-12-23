@@ -29,11 +29,18 @@ class Display_log():
         screenWidth = int(self.root.winfo_screenwidth())#Window横幅
         screenHeight = int(self.root.winfo_screenheight())#Window縦幅
         screenHeight = screenHeight*6/7
-        self.root.geometry(str(screenWidth)+"x"+str(int(screenHeight)))
+        self.root.geometry(str(screenWidth)+"x"+str(int(screenHeight)+10))
+        self.read_data = ""
         
         width00 = int(screenWidth/6);width01 = int(screenWidth-width00)
         height00 = int(screenHeight/3);height01 = int(screenHeight-height00)
         heightline = 15#チェックボックスとテキストボックスの行数# print(width00,width01,height00,height01)
+        
+        fontsize= 16
+        viewfont = tkFont.Font(size = fontsize, weight = "bold")
+
+        self.dataname = ttk.Label(text="状況",font=viewfont)
+        self.dataname.pack(in_= self.root ,side = tk.TOP, expand=True,anchor=tk.S) 
         # ##############
         # packと仲良くなろう https://imagingsolution.net/program/python/tkinter/widget_layout_pack/
         # ##############
@@ -77,29 +84,28 @@ class Display_log():
         word_button = ttk.Button(text="単語検索", command=lambda:[self._resarch_word()])
         self.entry1.pack(in_=ffbb, side=tk.LEFT, anchor="w", padx=4, pady=4, expand=True)
         word_button.pack(in_= ffbb,side = tk.LEFT, expand=True)
+        self.freqence_word = ttk.Label(text="")
+        self.freqence_word.pack(in_= ffbb,side = tk.LEFT, expand=True)
         
         self.wordlistbox = tk.Listbox(height=heightline,width=25)
         
         ffb.pack(in_= frame_button,side = tk.TOP)#ボタン横並び
         ffbb.pack(in_= frame_button,side = tk.TOP)#ボタン横並び
-        self.wordlistbox.pack(in_= frame_button, side = tk.TOP,ipadx = 30, ipady = 11)
-
-        fontsize= 15
-        viewfont = tkFont.Font(size = fontsize, weight = "bold")
-        ##################
-        # PC側のFrame
-        ##################
+        self.wordlistbox.pack(in_= frame_button, side = tk.TOP,ipadx = 30, ipady = 11)        
+        
+        frame_button.pack(in_= self.root,side = tk.LEFT, expand=True)
+        frame_imgUSER = tk.Frame(relief = tk.FLAT)
         frame_imgPC = tk.Frame(relief = tk.FLAT)
-        lPC = ttk.Label(text="PC音声", font=viewfont)
-        lPC.pack(in_= frame_imgPC ,side = tk.TOP)
-        self.canvasPC=tk.Canvas()
-        self.canvasPC.pack(in_= frame_imgPC ,side = tk.TOP)
-        self.labelPC = ttk.Label(text=":", font=viewfont)
-        self.labelPC.pack(in_= frame_imgPC ,side = tk.TOP)
+        frame_imgAndValue = tk.Frame(relief =tk.RIDGE)
+
+        frame_imgUSER.pack(in_= self.root, side = tk.LEFT, expand=True)
+        frame_imgPC.pack(in_= self.root,side = tk.LEFT, expand=True)
+        frame_imgAndValue.pack(in_= self.root,side = tk.LEFT, expand=True)
+        
+        
         ##################
         # USER側のFrame
         ##################
-        frame_imgUSER = tk.Frame(relief = tk.FLAT)
         self.lUSER = ttk.Label(text="ユーザ発話",font=viewfont)
         self.lUSER.pack(in_= frame_imgUSER ,side = tk.TOP) 
         # canvasUSER=tk.Canvas(width=640,height=426,bd=0, highlightthickness=0, relief='ridge')
@@ -107,11 +113,22 @@ class Display_log():
         self.canvasUSER.pack(in_= frame_imgUSER ,side = tk.TOP)
         self.labelUSER = ttk.Label(text=":",font=viewfont)
         self.labelUSER.pack(in_= frame_imgUSER ,side = tk.TOP)        
+        ##################
+        # PC側のFrame
+        ##################
+        
+        lPC = ttk.Label(text="PC音声", font=viewfont)
+        lPC.pack(in_= frame_imgPC ,side = tk.TOP)
+        self.canvasPC=tk.Canvas(relief= tk.RAISED)
+        self.canvasPC.pack(in_= frame_imgPC ,side = tk.TOP)
+        self.labelPC = ttk.Label(text=":", font=viewfont)
+        self.labelPC.pack(in_= frame_imgPC ,side = tk.TOP)
+
 
         ##################
         # andVlueのFrame
         ##################
-        frame_imgAndValue = tk.Frame(relief =tk.RIDGE)
+        
         label = ttk.Label(text="共通単語",font=viewfont)
         label.pack(in_= frame_imgAndValue ,side = tk.TOP)
         self.canvasAndValue=tk.Canvas(relief= tk.RAISED)
@@ -119,14 +136,10 @@ class Display_log():
         label = ttk.Label(text="  ",font=viewfont)
         label.pack(in_= frame_imgAndValue,side = tk.TOP)        
 
-
-        
         # 特定のIMGを取得してキャンバスに描画
         self._img_show()
-        frame_button.pack(in_= self.root,side = tk.LEFT, expand=True)
-        frame_imgPC.pack(in_= self.root,side = tk.LEFT, expand=True)
-        frame_imgAndValue.pack(in_= self.root,side = tk.LEFT, expand=True)
-        frame_imgUSER.pack(in_= self.root, side = tk.LEFT, expand=True)
+
+        
 
         # ##########################################
         # ファイル名取得後CSVファイルの読み込み
@@ -153,8 +166,8 @@ class Display_log():
             img = img.resize(( imgsize, imgsize ))
             img.save(VIEWLOG_DIR_PATH+'checed_resizeAndValue.png')
 
-            imgUSER = tk.PhotoImage(file=VIEWLOG_DIR_PATH+'checed_resizeUSER.png')
-            imgPC = tk.PhotoImage(file=VIEWLOG_DIR_PATH+'checked_resizePC.png')
+            imgUSER     = tk.PhotoImage(file=VIEWLOG_DIR_PATH+'checed_resizeUSER.png')
+            imgPC       = tk.PhotoImage(file=VIEWLOG_DIR_PATH+'checked_resizePC.png')
             imgAndValue = tk.PhotoImage(file=VIEWLOG_DIR_PATH+'checed_resizeAndValue.png')
 
             self.canvasPC.delete('p1')
@@ -188,6 +201,9 @@ class Display_log():
                 print("true")         
                 # CSVデータ格納用クラス変数に代入する．ボタン選択でも実行可能なようにする
                 self.csv_data=csop.read_csv(self.FILE_PATH,self.swith_value)
+                self.read_data = self.csv_data.get_result_data()
+                data_name = self.csv_data.data_name
+                self.dataname.config(text=data_name)
                 ##################
                 # 過去ログの表示
                 ##################
@@ -226,9 +242,10 @@ class Display_log():
         self.csv_data.set_swith_value(self.swith_value)#スイッチバリューを反映させておく
         path = (os.path.basename(self.FILE_PATH))
         filename, fileext = os.path.splitext(os.path.basename(path))
-        dd = self.csv_data.compar_list(self.ct_area.get_checked(), DIR_NAME+filename)
+        self.read_data = self.csv_data.compar_list(self.ct_area.get_checked(), DIR_NAME+filename)
+        
         self.listbox2.delete(0, tk.END)
-        for col in dd:
+        for col in self.read_data:
             self.listbox2.insert(tk.END, col)
             # self.listbox2.config()
         self.labelUSER.config(text=str(self.csv_data.USER_amout)+"字")
@@ -240,16 +257,29 @@ class Display_log():
             self.wordlistbox.insert(tk.END, wspc[0])
             print(wspc[0])
     def _resarch_word(self):
+        # indices =self.wordlistbox.curselection()
+        # index = indices[0]
+        # try:
+        #     resarch_word = self.wordlistbox.get(index)
+        #     self.entry1.config(text = resarch_word)
+        #     # print(resarch_word)
+        # except:
         resarch_word = self.entry1.get()
+        print(resarch_word)
+        
         #列番号を元に更新する
         cc = 0 
-        dd = self.csv_data.get_result_data()
+        dd = self.read_data
+        for i,text in enumerate(dd):
+            if resarch_word in text:
+                self.listbox2.itemconfig(int(i), {'bg': 'white'})
+        
         for i,text in enumerate(dd):
             if resarch_word in text:
                 self.listbox2.itemconfig(int(i), {'bg': '#f0e68c'})
-                cc+=0
-    
-        
+                cc+=1
+        print(cc)
+        self.freqence_word.config(text=str(cc)+"回")
                             
     def view_log(self):
         abstract_list = [DAY, HINSHI] #抽象的なリスト
