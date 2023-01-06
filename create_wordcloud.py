@@ -15,13 +15,13 @@ stop_words = ['感じ','もう','し','ん','よう','ー','の','ー','ー'
                 'そう', 'ない', 'いる', 'する', 'まま', 'よう',
               'てる', 'なる', 'こと', 'もう', 'いい', 'ある',
               'ゆく', 'れる', 'なっ', 'ちゃっ', 'ちょっ',
-              'ちょっ', 'やっ', 'あっ', 'ちゃう', 'その', 'あの',
+              'ちょっ', 'やっ', 'あっ', 'ちゃう', 'その', 'あの','あと',
               'この', 'どの', 'それ', 'あれ', 'これ', 'どれ',
               'から', 'なら', 'だけ', 'じゃあ', 'られ', 'たら', 'のに',
               'って', 'られ', 'ずっ', 'じゃ', 'ちゃ', 'くれ', 'なんて', 'だろ',
               'でしょ', 'せる', 'なれ', 'どう', 'たい', 'けど', 'でも', 'って',
               'まで', 'なく', 'もの', 'ここ', 'どこ', 'そこ', 'さえ', 'なく',
-              'たり', 'なり', 'だっ', 'まで', 'ため', 'ながら', 'より', 'られる', 'です']
+              'たり', 'なり', 'だっ', 'まで', 'ため', 'ながら', 'より', 'られる', 'です' ,'風','気','別','人']
 DIR_NAME = "../speech_to_text_2121040"
 VIEWLOG_DIR_PATH = DIR_NAME+"/VIEWLOG_FILE/"#ログを保存する場所
 
@@ -190,9 +190,9 @@ def create_word_cloud_for_file(CSVFILENAME):
     # wordcloud.to_file('./wc2.png') 
     wordcloud.to_file(CSVFILENAME+'PC.png') 
 
-def create_choiced_wordcloud(word_only_data, save_file_name, hinshilist,switch_view):
+def create_choiced_wordcloud(word_only_data, save_file_name, hinshilist,switch_view, swith_v_value):
     ######################################
-    # 3種（PC, USER, AndValue）のWordCloud生成
+    # 3種（PC, USER, common）のWordCloud生成
     ######################################
     def ggg(word_only_data):
         data = word_only_data
@@ -217,7 +217,7 @@ def create_choiced_wordcloud(word_only_data, save_file_name, hinshilist,switch_v
     wordcountUSER = UU[1]
     wordcountPC   = PP[1]#[('あと', 18), ('人', 12), ...  ]
 
-    wordcount_andvalue = {};del_wordcount_PC = {};del_wordcount_USERs = {}
+    wordcount_common = {};del_wordcount_PC = {};del_wordcount_USERs = {}
     print(ALL[1])
     # for i, wspc in enumerate(ALL[1]):
         # print(wspc)
@@ -228,18 +228,18 @@ def create_choiced_wordcloud(word_only_data, save_file_name, hinshilist,switch_v
             # print(weuser)
             if wspc[1]>1 and weuser[1]>1 and wspc[0] == weuser[0]:#単語情報が一致かつ出現回数1以上なら
                 cc = int(wspc[1])+int(weuser[1])
-                wordcount_andvalue[wspc[0]] = cc
-                # print(wordcount_andvalue)
+                wordcount_common[wspc[0]] = cc
+                # print(wordcount_common)
             if wspc[1]>1 and weuser[1]>1 and wspc[0] != weuser[0]:#単語情報が一致かつ出現回数1以上なら:
                 del_wordcount_PC[wspc[0]] = int(wspc[1])
                 del_wordcount_USERs[weuser[0]] = int(weuser[1])
 
     #　合致する単語はPC,USERからそれぞれ抜き取りを行う
-    for key, value in wordcount_andvalue.items():
+    for key, value in wordcount_common.items():
         if key in del_wordcount_PC:
             del del_wordcount_PC[key]
 
-    for key, value in wordcount_andvalue.items():
+    for key, value in wordcount_common.items():
         if key in del_wordcount_USERs:
             del del_wordcount_USERs[key]
             # print(key)
@@ -247,7 +247,7 @@ def create_choiced_wordcloud(word_only_data, save_file_name, hinshilist,switch_v
 
     # print(del_wordcount_PC)
     # print(del_wordcount_USERs)
-    # print(wordcount_andvalue)
+    # print(wordcount_common)
 
     
     # Windowsにインストールされているフォントを指定 
@@ -265,6 +265,18 @@ def create_choiced_wordcloud(word_only_data, save_file_name, hinshilist,switch_v
     # wordcloud = WordCloud(width=1920, height=1080)
     # ワードクラウドの作成
     wws = 500
+    # if swith_v_value:
+    #     print("bTEtUser")
+    #     print(teUSER)
+    #     print("bcommon")
+    #     print(wordcount_common)
+    #     teUSER = sorted(teUSER)
+    #     tePC = sorted(tePC)
+    #     wordcount_common = sorted(wordcount_common)
+    #     print("acommon")
+    #     print(teUSER)
+    #     print("acommon")
+    #     print(wordcount_common)
     try:
         wordcloud.generate(teUSER)
         wordcloud.to_file(VIEWLOG_DIR_PATH+'checed_USER.png') 
@@ -282,7 +294,7 @@ def create_choiced_wordcloud(word_only_data, save_file_name, hinshilist,switch_v
         
         print(e)
     try:
-        wordcloud.fit_words(wordcount_andvalue)
+        wordcloud.fit_words(wordcount_common)
         wordcloud.to_file(VIEWLOG_DIR_PATH+'checed_AndValue.png') 
     except BaseException as e:
         # 何も生成されない時は

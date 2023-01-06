@@ -6,6 +6,11 @@ from PIL import Image, ImageTk
 import tkinter.messagebox as mb
 import os
 import tkinter.font as tkFont
+import math
+
+import pandas as pd
+import datetime as dt
+
 
 import  csv_operate as csop
 
@@ -41,6 +46,7 @@ class Display_log():
 
         self.dataname = ttk.Label(text="状況",font=viewfont)
         self.dataname.pack(in_= self.root ,side = tk.TOP, expand=True,anchor=tk.S) 
+
         # ##############
         # packと仲良くなろう https://imagingsolution.net/program/python/tkinter/widget_layout_pack/
         # ##############
@@ -55,15 +61,52 @@ class Display_log():
         frame_top.pack(fill = tk.X)
         
         ##################
+        # スケールバー～ラベル位置（オプションをいくつか設定）
+        # https://imagingsolution.net/program/python/tkinter/scale_trackbar/
+        ##################
+        
+        self.time_scale = tk.Scale(
+                        self.root,  
+                        command = self._time_scale_command,
+                        orient=tk.HORIZONTAL,   # 配置の向き、水平(HORIZONTAL)、垂直(VERTICAL)
+                        length = screenWidth,   # 全体の長さ
+                        width = 15,             # 全体の太さ
+                        sliderlength = 20,      # スライダー（つまみ）の幅
+                        from_ = 0, to = 24, # 最小値（開始の値 # 最大値（終了の値）
+                        resolution=0.5,         # 変化の分解能(初期値:1)
+                        tickinterval=0,         # 目盛りの分解能(初期値0で表示なし)
+                        showvalue=False,         # スライダー上の値を非表示にする
+                        label = "時刻：0時から0分"
+                        )
+        self.time_scale.pack()
+
+        self.mometn_scale = tk.Scale(
+                        self.root,  
+                        command = self._time_scale_command,
+                        orient=tk.HORIZONTAL,   # 配置の向き、水平(HORIZONTAL)、垂直(VERTICAL)
+                        length = screenWidth,           # 全体の長さ
+                        width = 15,             # 全体の太さ
+                        sliderlength = 20,      # スライダー（つまみ）の幅
+                        from_ = 0, to = 24, # 最小値（開始の値 # 最大値（終了の値）
+                        resolution=0.5,           # 変化の分解能(初期値:1)
+                        tickinterval=0,        # 目盛りの分解能(初期値0で表示なし)
+                        showvalue=False      # スライダー上の値を非表示にする
+                        # label = "取得時刻30分おき（時間）"
+                        )
+        self.mometn_scale.pack()
+        
+        ##################
         # ButtonFRRAME：ボタンをフレームに入れて横並びで配置
         ##################
         frame_button = tk.Frame(self.root, borderwidth = 2, relief = tk.FLAT)
         ffbwidth = 9
         self.swith_value: bool = False
+        self.swith_v_value: bool = False
         ffb = tk.Frame(self.root, borderwidth = 2, relief = tk.FLAT, pady=5, padx=5,width=ffbwidth)
         select_checkbox_button = ttk.Button(text="選択確認", command=lambda:[self._treebox_check(),self._img_show()])
         select_file_button = ttk.Button(text="ファイル選択", command=lambda:[self._select_full_log()])
         select_switch = ttk.Button(text="抜き取りOFF", command=lambda:[click()])
+        select_switch_v = ttk.Button(text="昇順", command=lambda:[click_v()])
 
         def click():
             if self.swith_value:
@@ -74,9 +117,19 @@ class Display_log():
                 select_switch.config(text='抜き取りON')
                 self.swith_value = not self.swith_value
         
+        def click_v():
+            if self.swith_v_value:
+                select_switch_v.config(text='昇順')
+                self.swith_v_value = not self.swith_v_value
+                
+            else:
+                select_switch_v.config(text='降順')
+                self.swith_v_value = not self.swith_v_value
+        
         select_checkbox_button.pack(in_= ffb,side = tk.LEFT, expand=True)
         select_file_button.pack(in_= ffb,side = tk.LEFT, expand=True)
         select_switch.pack(in_= ffb,side = tk.LEFT, expand=True)
+        # select_switch_v.pack(in_= ffb,side = tk.LEFT, expand=True)
     
         ffbb = tk.Frame(self.root, borderwidth = 2, relief = tk.FLAT, pady=5, padx=5,width=ffbwidth)
         
@@ -96,12 +149,11 @@ class Display_log():
         frame_button.pack(in_= self.root,side = tk.LEFT, expand=True)
         frame_imgUSER = tk.Frame(relief = tk.FLAT)
         frame_imgPC = tk.Frame(relief = tk.FLAT)
-        frame_imgAndValue = tk.Frame(relief =tk.RIDGE)
+        frame_imgcommn = tk.Frame(relief =tk.RIDGE)
 
         frame_imgUSER.pack(in_= self.root, side = tk.LEFT, expand=True)
+        frame_imgcommn.pack(in_= self.root,side = tk.LEFT, expand=True)
         frame_imgPC.pack(in_= self.root,side = tk.LEFT, expand=True)
-        frame_imgAndValue.pack(in_= self.root,side = tk.LEFT, expand=True)
-        
         
         ##################
         # USER側のFrame
@@ -130,16 +182,14 @@ class Display_log():
         ##################
         
         label = ttk.Label(text="共通単語",font=viewfont)
-        label.pack(in_= frame_imgAndValue ,side = tk.TOP)
-        self.canvasAndValue=tk.Canvas(relief= tk.RAISED)
-        self.canvasAndValue.pack(in_= frame_imgAndValue ,side = tk.TOP)
+        label.pack(in_= frame_imgcommn ,side = tk.TOP)
+        self.canvascommn=tk.Canvas(relief= tk.RAISED)
+        self.canvascommn.pack(in_= frame_imgcommn ,side = tk.TOP)
         label = ttk.Label(text="  ",font=viewfont)
-        label.pack(in_= frame_imgAndValue,side = tk.TOP)        
+        label.pack(in_= frame_imgcommn,side = tk.TOP)        
 
         # 特定のIMGを取得してキャンバスに描画
         self._img_show()
-
-        
 
         # ##########################################
         # ファイル名取得後CSVファイルの読み込み
@@ -147,9 +197,25 @@ class Display_log():
         self._select_full_log()
         self.view_log()
 
+        # ##########################################
+        # CSVファイルの読み込後の処理
+        # ##########################################
+        self.time_scale.config(from_ = self.csv_data.startday.strftime("%H"),  to =  self.csv_data.endday.strftime("%H"))
+
         self.root.mainloop()
+
+    def _time_scale_command(self, dummy_parameter):      
+        # 引数について　https://stackoverflow.com/questions/23842770/python-function-takes-1-positional-argument-but-2-were-given-how
+        # startscaletime  = math.modf(float(self.time_scale.get()))# スケールバーの値取得
+        startscaletime = float(self.time_scale.get())
+        floatstartscale = startscaletime-int(startscaletime)
+        tt = format(int(startscaletime), '02')+":"+format(int(floatstartscale*60), '02')#format(数字,0埋め方)
+        scalemomenttime = (self.mometn_scale.get())# スケールバーの値取得
+        tt2 = str(scalemomenttime)+"時間"
+        self.time_scale.config(label="時刻 : "+str(tt)+"から"+str(tt2))
+
+        self.csv_data.scale_list(startscaletime, scalemomenttime)
         
-    
     def _img_show(self):
         try:   
             # 画像を指定              
@@ -168,16 +234,16 @@ class Display_log():
 
             imgUSER     = tk.PhotoImage(file=VIEWLOG_DIR_PATH+'checed_resizeUSER.png')
             imgPC       = tk.PhotoImage(file=VIEWLOG_DIR_PATH+'checked_resizePC.png')
-            imgAndValue = tk.PhotoImage(file=VIEWLOG_DIR_PATH+'checed_resizeAndValue.png')
+            imgcommn = tk.PhotoImage(file=VIEWLOG_DIR_PATH+'checed_resizeAndValue.png')
 
             self.canvasPC.delete('p1')
             self.canvasUSER.delete('p1')
-            self.canvasAndValue.delete('p1')
+            self.canvascommn.delete('p1')
 
             # キャンバスに画像を表示する       
             self.canvasUSER.create_image(10,10,image=imgUSER,tag='p1', anchor = tk.NW)
             self.canvasPC.create_image(10,10,image=imgPC,tag='p1', anchor = tk.NW)
-            self.canvasAndValue.create_image(10,10,image=imgAndValue,tag='p1', anchor = tk.NW)
+            self.canvascommn.create_image(10,10,image=imgcommn,tag='p1', anchor = tk.NW)
 
         except BaseException as e:
             print(e)
@@ -196,11 +262,10 @@ class Display_log():
         if return_YN == False: #「No」をクリックされた時の処理
             print("No!!!")
         elif return_YN == True: #「Yes」をクリックされた時の処理
-            res = ""
             try:
-                print("true")         
+                print("Success read CSV file")         
                 # CSVデータ格納用クラス変数に代入する．ボタン選択でも実行可能なようにする
-                self.csv_data=csop.read_csv(self.FILE_PATH,self.swith_value)
+                self.csv_data = csop.read_csv(self.FILE_PATH,self.swith_value, self.swith_v_value)
                 self.read_data = self.csv_data.get_result_data()
                 data_name = self.csv_data.data_name
                 self.dataname.config(text=data_name)
@@ -234,12 +299,13 @@ class Display_log():
                     self.ct_area.change_state(DAY, "checked")
                 except BaseException as e:
                     print (e) 
-            except:
-                print ("Error."+res)
+            except BaseException as e:
+                print("Success read CSV file")
+                print (e)
         # return self.FILE_PATH
     
     def _treebox_check(self):
-        self.csv_data.set_swith_value(self.swith_value)#スイッチバリューを反映させておく
+        self.csv_data.set_swith_value(self.swith_value, self.swith_v_value)#スイッチバリューを反映させておく
         path = (os.path.basename(self.FILE_PATH))
         filename, fileext = os.path.splitext(os.path.basename(path))
         self.read_data = self.csv_data.compar_list(self.ct_area.get_checked(), DIR_NAME+filename)
@@ -272,7 +338,7 @@ class Display_log():
         dd = self.read_data
         for i,text in enumerate(dd):
             if resarch_word in text:
-                self.listbox2.itemconfig(int(i), {'bg': 'white'})
+                self.listbox2.itemconfig(int(i), {'bg': 'ffffff'})
         
         for i,text in enumerate(dd):
             if resarch_word in text:

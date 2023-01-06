@@ -7,10 +7,9 @@ import csv
 import os
 
 import MeCab
-from sklearn.feature_extraction.text import TfidfVectorizer
-from janome.tokenizer import Tokenizer
-import pandas as pd
 import create_wordcloud as cw
+import pandas as pd
+import datetime as dt
 
 # hinshi_list = ["その他", "感動詞", "記号", "形容詞", "名詞", "助詞", "助動詞", "接続詞", "接頭詞", "動詞", "副詞", "連体詞"] #抽象的なリストの「漫画」の具体例
 hinshi_list = ["感動詞",  "形容詞", "名詞", "動詞", "副詞", "連体詞"] #抽象的なリストの「漫画」の具体例
@@ -22,11 +21,14 @@ def addwriteCsv(date, time, contents, openFileName = "csvTes.csv"):
     file.close()
 
 class read_csv():
-    def __init__(self, filename, swith_value):   
+    def __init__(self, filename, swith_value, swith_v_value):   
         self.swith_value = swith_value# 切り替え用ワードクラウドの単語抜き取りをするか否かの
+        self.swith_v_value = swith_v_value
         self.result_data = []
         self.full_data =[]#CSVのfullデータ
         self.data_name = ""
+
+        self.pdfulldata = []
 
         self.day = [] # fullデータのうち日付のみのデータ（重複無し）
         self.windowOB = []## fullデータのうちwindoeのみのデータ（重複無し）
@@ -43,6 +45,10 @@ class read_csv():
         # 読み込んでself.day,  self.windowOB ,self.speakerに重複無しデータの挿入
         self.readCsv(self.filepath)
         self.mono_word_list = {}
+
+        self.startday:dt.timedelta
+        self.endday:dt.timedelta
+
     def re_init(self, filename):
         self.result_data = []
         self.full_data =[]#CSVのfullデータ
@@ -129,7 +135,7 @@ class read_csv():
         print("choiced_PCword_amount:"+str(self.PC_amout))
         print("choiced_USERword_amount:"+str(self.USER_amout))
         
-        self.mono_word_list = cw.create_choiced_wordcloud(word_only_data,save_file_name, choiced_hinshi, self.swith_value)
+        self.mono_word_list = cw.create_choiced_wordcloud(word_only_data,save_file_name, choiced_hinshi, self.swith_value, self.swith_v_value)
         # print(self.mono_word_list)
         
         return self.result_data
@@ -144,8 +150,33 @@ class read_csv():
         return self.speaker
     def get_result_data(self):
         return self.result_data
-    def set_swith_value(self, swith_value):
+    def set_swith_value(self, swith_value, swith_v_value):
         self.swith_value = bool(swith_value)
+        self.swith_v_value = bool(swith_v_value)
+    
+    def scale_list(self, startscaletime, scalemomenttime):
+    # , choicedlist:list, save_file_name:str):
+        # datetime.replaceがなぜか動かないのでtimestampを作り直す
+        scaletimefloat = startscaletime - int(startscaletime)#少数部分のみ
+        startd = dt.datetime(year = int(self.startday.strftime("%Y")), 
+                            month= int(self.startday.strftime("%m")), 
+                            day = int(self.startday.strftime("%d")),
+                            hour= int(startscaletime),
+                            minute = int(scaletimefloat*60),
+                            second = 0)
+        scalemomenttimefloat = scalemomenttime - int(scalemomenttime)
+        endd = startd +dt.timedelta(hours=int(scalemomenttime), minutes=int(scalemomenttimefloat*60))
+        print("日付")
+        print(self.pdfulldata[( self.pdfulldata["日付"] > startd)  & (self.pdfulldata["日付"] < endd)])
+            # print(d)
+            
+            # i = int(scalemomentTime) -int(scalemomentTime)
+            # d2 = d+dt.timedelta(hours=int(scalemomentTime), minutes=i*60)
+            
+            # print(d2)
+            # # print("tyu")
+            # print(df[(df["国語"] > d)  & (df["国語"] < d2)])
+
 
     def readCsv(self, openFileName):
         
@@ -160,6 +191,7 @@ class read_csv():
 
         file = open(openFileName, 'r', encoding="utf_8")
         data = csv.reader(file)
+    
         for j, row in enumerate(data):
             if j==0:
                 print("self.fulldatajjj")
@@ -181,6 +213,25 @@ class read_csv():
                     if i == 7:#WINDOW名
                         self.windowOB.append(col)
         file.close()
+
+        ##################################
+        # pandas
+        #################################
+        self.pdfulldata =  pd.read_csv("a.csv", header=None)
+        try:
+            # カラム名を設定
+            self.pdfulldata.columns=  ["日付", "時", "音声ファイル", "認識結果", "認識文字数", "確信度", "デバイス", "ウインドウ"]
+        except BaseException as e:
+            print(e)
+            self.pdfulldata = self.pdfulldata.drop([0])#0行目を削除
+            self.pdfulldata =self.pdfulldata.reset_index()#行インデックスの振り直し
+            # カラム名を設定
+            self.pdfulldata.columns = ["日付", "時", "音声ファイル", "認識結果", "認識文字数", "確信度", "デバイス", "ウインドウ"]
+        # dataFrame型に変換
+        self.pdfulldata["日付"] = pd.to_datetime(self.pdfulldata["音声ファイル"].str[:19], format='%Y-%m-%d-%H.%M.%S')
+        self.startday = self.pdfulldata.loc[0]["日付"]
+        self.endday = self.pdfulldata.loc[len(self.pdfulldata)-1]["日付"]
+        #################################
         dbc()   
 
     # 分かち書きを入手 
@@ -206,19 +257,19 @@ class read_csv():
             # result = tagger.parse(sample_txt)
             # print(result)
         # モデルの生成
-        vectorizer = TfidfVectorizer(smooth_idf = False)
+        # vectorizer = TfidfVectorizer(smooth_idf = False)
         # TF-IDFの計算
-        values = vectorizer.fit_transform(only_full_uttrance).toarray()
+        # values = vectorizer.fit_transform(only_full_uttrance).toarray()
         # 特徴量ラベルの取得
-        words = vectorizer.get_feature_names_out()
+        # words = vectorizer.get_feature_names_out()
         #結果のプリント
-        print(values)
-        print(words)
+        # print(values)
+        # print(words)
         
-        df = pd.DataFrame(values, columns = words)
-        print(df.T.sort_values(by=0,ascending=False)[0])
-        print('---------------')
-        print(df.T.sort_values(by=1,ascending=False)[1])
+        # df = pd.DataFrame(values, columns = words)
+        # print(df.T.sort_values(by=0,ascending=False)[0])
+        # print('---------------')
+        # print(df.T.sort_values(by=1,ascending=False)[1])
             
     
         # readCsv("2022-10-26.csv")
