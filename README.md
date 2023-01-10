@@ -11,19 +11,23 @@ $ pip install matplotlib
 ~~~
 
 ## meca辞書のインストールが必要
+
 1. ダウンロード
+
 下記URLへアクセスします。
 https://github.com/ikegami-yukino/mecab/releases
 mecab-64-0.996.2.exeをクリックして、ダウンロードを開始します．
 ファイルは、適当な場所に保存してください．
 
+
 1. インストール
+
 ダウンロードしたexeを起動し，「OK」をクリック．
 
 #### 辞書の文字コードの選択
 「UTF-8」を選択して、「次へ」をクリック．
 
-#### 仕様居k\抱く契約書の同意
+#### 使用許諾契約書の同意
 「同意する」にチェックを入れて、「次へ」をクリックします．
 
 #### インストール先の指定
@@ -58,15 +62,15 @@ Windowsマークキーを押して「sysdm.cpl」と検索して、Enterを押�
 システム環境変数の「Path」にMecabをインストールしたフォルダにある「bin」を指定します。
 
 3. 確認
+
 ターミナルやコマンドライン上で以下のコマンドを押下してバージョンが出てくればOK
 ~~~
 $ mecab -v
 ~~~
 -> mecab of 0.996ba
 
-
+### 参考サイト
+- 下記URLから「MecabのWindowsへのｚインストール」を行う（「PythonからMecabを利用する」の直前まで）
 https://self-development.info/mecab%E3%82%92%E3%82%A4%E3%83%B3%E3%82%B9%E3%83%88%E3%83%BC%E3%83%AB%E3%81%97%E3%81%A6python%E3%81%A7%E4%BD%BF%E3%81%86%E3%80%90windows%E3%80%91/
 
 
-
-- 下記URLから「MecabのWindowsへのインストール」を行う（「PythonからMecabを利用する」の直前まで）
