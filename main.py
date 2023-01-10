@@ -1,8 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
-from turtle import width
 from ttkwidgets import CheckboxTreeview #pip install ttkwidgetsでインストール
-from PIL import Image, ImageTk
+from PIL import Image
 import tkinter.messagebox as mb
 import os
 import tkinter.font as tkFont
