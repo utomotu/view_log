@@ -6,11 +6,6 @@ from PIL import Image, ImageTk
 import tkinter.messagebox as mb
 import os
 import tkinter.font as tkFont
-import math
-
-import pandas as pd
-import datetime as dt
-
 
 import  csv_operate as csop
 
@@ -39,7 +34,7 @@ class Display_log():
         
         width00 = int(screenWidth/6);width01 = int(screenWidth-width00)
         height00 = int(screenHeight/3);height01 = int(screenHeight-height00)
-        heightline = 15#チェックボックスとテキストボックスの行数# print(width00,width01,height00,height01)
+        heightline = 9#チェックボックスとテキストボックスの行数# print(width00,width01,height00,height01)
         
         fontsize= 16
         viewfont = tkFont.Font(size = fontsize, weight = "bold")
@@ -50,14 +45,32 @@ class Display_log():
         # ##############
         # packと仲良くなろう https://imagingsolution.net/program/python/tkinter/widget_layout_pack/
         # ##############
+
+        ##################
+        # result表示
+        ##################
         frame_top = tk.Frame(self.root, borderwidth = 2, relief = tk.SUNKEN)
         # チェックボックスツリー
-        self.ct_area = CheckboxTreeview(height=heightline-3 , show='tree') #GUIの中にチェックボックスツリービューを表示する場所を作る
+        self.ct_area = CheckboxTreeview(height=heightline , show='tree') #GUIの中にチェックボックスツリービューを表示する場所を作る
         #チェックボックスツリービューを設置
         self.ct_area.pack(in_ =  frame_top ,side = tk.LEFT,ipadx = 30, ipady = 1)
+        
         # テキストボックス：フルログ用
-        self.listbox2 = tk.Listbox(height=heightline,width=width01-500)
-        self.listbox2.pack(in_ =  frame_top, side = tk.LEFT,ipadx = 30, ipady = 11)
+        column = ('日', '時間',"話者", '認識結果')
+        self.tree = ttk.Treeview(height=heightline-2, columns=column)
+        self.tree["show"] = "headings"
+        self.tree.column(0, width=40)
+        self.tree.column(1, width=80)
+        self.tree.column(2, width=50)
+        self.tree.column(3, width=width01)
+        # 列の見出し設定
+        self.tree.heading(0,text='日')
+        self.tree.heading(1, text='時間',anchor='center')
+        self.tree.heading(2, text='', anchor='w')
+        self.tree.heading(3, text='認識結果', anchor='w')
+        #  self.tree.heading('Score',text='Score', anchor='center')
+        
+        self.tree.pack(in_ =  frame_top, side = tk.LEFT,ipadx = 30, ipady = 11)
         frame_top.pack(fill = tk.X)
         
         ##################
@@ -213,8 +226,11 @@ class Display_log():
         scalemomenttime = (self.mometn_scale.get())# スケールバーの値取得
         tt2 = str(scalemomenttime)+"時間"
         self.time_scale.config(label="時刻 : "+str(tt)+"から"+str(tt2))
-
-        self.csv_data.scale_list(startscaletime, scalemomenttime)
+        
+        path = (os.path.basename(self.FILE_PATH))
+        filename, fileext = os.path.splitext(os.path.basename(path))
+        self.csv_data.scale_list(startscaletime, scalemomenttime, self.ct_area.get_checked(), DIR_NAME+filename)
+        self._img_show()
         
     def _img_show(self):
         try:   
@@ -263,59 +279,40 @@ class Display_log():
             print("No!!!")
         elif return_YN == True: #「Yes」をクリックされた時の処理
             try:
-                print("Success read CSV file")         
                 # CSVデータ格納用クラス変数に代入する．ボタン選択でも実行可能なようにする
                 self.csv_data = csop.read_csv(self.FILE_PATH,self.swith_value, self.swith_v_value)
                 self.read_data = self.csv_data.get_result_data()
                 data_name = self.csv_data.data_name
                 self.dataname.config(text=data_name)
                 ##################
-                # 過去ログの表示
+                # 読み込んだ過去ログの表示
                 ##################
-                dd = self.csv_data.get_result_data()
-                self.listbox2.delete(0, tk.END)# ボックスの中をリセット
-                for col in dd:
-                    self.listbox2.insert(tk.END, col)
-                    # self.listbox2.config()
-                # なんの処理してるんだ棟．．．．
-                # self.csv_data.re_init(self.FILE_PATH)    
-                ##################
-                # チェックボックスの更新
-                ##################
-                book_list =self.csv_data.get_day()
-                    # insert(親、インデックス、iid=なし、**kw )[ソース]
-                    # 新しいアイテムを作成し、新しく作成されたアイテムのアイテム識別子を返します。
-                    # パラメーター：	
-                    # parent ( str ) – 親アイテムの識別子
-                    # index ( intまたは"end" ) – 親の子のリストのどこに新しい項目を挿入するか
-                    # iid ( Noneまたはstr ) – アイテム識別子。iid はツリーにまだ存在してはなりません。iid が None の場合、新しい一意の識別子が生成されます。
-                    # kwttk.Treeview.insert() –メソッドに渡されるその他のオプション
-                try:
-                    self.ct_area.delete(DAY)
-                    self.ct_area.insert("", "0", DAY, text=DAY)
+                # df:pd
+                df = self.csv_data.pdfulldata
+                for i in range(len(df)):
+                    try:
+                        self.tree.insert("", "end", values=(df.iloc[i]["日"], df.iloc[i]["時"], df.iloc[i]["デバイス"], df.iloc[i]["認識結果"]))
+                    except:
+                        self.tree.insert("", "end", values=(df.iloc[i]["日"], df.iloc[i]["時"], df.iloc[i]["デバイス"], df.iloc[i]["認識結果"]))
                 
-                    for book in book_list:
-                        self.ct_area.insert(DAY, "end", book, text = book+"時")
-                    self.ct_area.change_state(DAY, "checked")
-                except BaseException as e:
-                    print (e) 
+                
+                # なんの処理してるんだ棟．．．．
+                # self.csv_data.re_init(self.FILE_PATH)     
             except BaseException as e:
-                print("Success read CSV file")
+                print("Error read CSV file")
                 print (e)
         # return self.FILE_PATH
     
     def _treebox_check(self):
         self.csv_data.set_swith_value(self.swith_value, self.swith_v_value)#スイッチバリューを反映させておく
         path = (os.path.basename(self.FILE_PATH))
+
         filename, fileext = os.path.splitext(os.path.basename(path))
         self.read_data = self.csv_data.compar_list(self.ct_area.get_checked(), DIR_NAME+filename)
         
-        self.listbox2.delete(0, tk.END)
-        for col in self.read_data:
-            self.listbox2.insert(tk.END, col)
-            # self.listbox2.config()
         self.labelUSER.config(text=str(self.csv_data.USER_amout)+"字")
         self.labelPC.config(text=str(self.csv_data.PC_amout)+"字")
+        
         self.csv_data.re_init(self.FILE_PATH)
         mmww = self.csv_data.get_mono_word_listy()
         # print(mmww)
@@ -336,39 +333,28 @@ class Display_log():
         #列番号を元に更新する
         cc = 0 
         dd = self.read_data
-        for i,text in enumerate(dd):
-            if resarch_word in text:
-                self.listbox2.itemconfig(int(i), {'bg': 'ffffff'})
+        # for i,text in enumerate(dd):
+        #     if resarch_word in text:
+        #         self.listbox2.itemconfig(int(i), {'bg': 'ffffff'})
         
-        for i,text in enumerate(dd):
-            if resarch_word in text:
-                self.listbox2.itemconfig(int(i), {'bg': '#f0e68c'})
-                cc+=1
+        # for i,text in enumerate(dd):
+        #     if resarch_word in text:
+        #         self.listbox2.itemconfig(int(i), {'bg': '#f0e68c'})
+        #         cc+=1
         print(cc)
         self.freqence_word.config(text=str(cc)+"回")
                             
     def view_log(self):
-        abstract_list = [DAY, HINSHI] #抽象的なリスト
-        book_list =self.csv_data.get_day()
+        abstract_list = [HINSHI] #抽象的なリスト
         hinshi_list = ["感動詞", "形容詞", "名詞", "接続詞", "動詞", "副詞", "連体詞"] #抽象的なリストの「漫画」の具体例
-        # hinshi_list = ["その他", "感動詞", "記号", "形容詞", "名詞", "助詞", "助動詞", "接続詞", "接頭詞", "動詞", "副詞", "連体詞"] #抽象的なリストの「漫画」の具体例
-        try:
-            self.ct_area.delete(DAY)
-        except:
-            print("error")
         # チェックボックスに情報を付与
         for abstract in abstract_list:
-            self.ct_area.insert("", "0", abstract, text=abstract)
-            if abstract == DAY:
-                for book in book_list:
-                    self.ct_area.insert(abstract, "end", book, text = book+"時")
-                    
+            self.ct_area.insert("", "0", abstract, text=abstract)        
             if abstract == HINSHI:
                 for i in hinshi_list:
                     self.ct_area.insert(abstract, "end", i, text = i)
                     if(i == "名詞"):
-                        print("adasdasda")
                         self.ct_area.change_state(i, "checked")
-        self.ct_area.change_state(DAY, "checked")
+
 if __name__ == "__main__":
     b=Display_log()

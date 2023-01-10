@@ -43,11 +43,13 @@ class read_csv():
         self.open_filename = filename
         self.fileext = fileext
         # 読み込んでself.day,  self.windowOB ,self.speakerに重複無しデータの挿入
-        self.readCsv(self.filepath)
+        
         self.mono_word_list = {}
 
         self.startday:dt.timedelta
         self.endday:dt.timedelta
+
+        self.readCsv(self.filepath)
 
     def re_init(self, filename):
         self.result_data = []
@@ -139,7 +141,6 @@ class read_csv():
         # print(self.mono_word_list)
         
         return self.result_data
-    
     def get_mono_word_listy(self):
         return self.mono_word_list
     def get_day(self):
@@ -154,7 +155,7 @@ class read_csv():
         self.swith_value = bool(swith_value)
         self.swith_v_value = bool(swith_v_value)
     
-    def scale_list(self, startscaletime, scalemomenttime):
+    def scale_list(self, startscaletime, scalemomenttime, choiceList, save_file_name):
     # , choicedlist:list, save_file_name:str):
         # datetime.replaceがなぜか動かないのでtimestampを作り直す
         scaletimefloat = startscaletime - int(startscaletime)#少数部分のみ
@@ -166,17 +167,34 @@ class read_csv():
                             second = 0)
         scalemomenttimefloat = scalemomenttime - int(scalemomenttime)
         endd = startd +dt.timedelta(hours=int(scalemomenttime), minutes=int(scalemomenttimefloat*60))
-        print("日付")
-        print(self.pdfulldata[( self.pdfulldata["日付"] > startd)  & (self.pdfulldata["日付"] < endd)])
-            # print(d)
-            
-            # i = int(scalemomentTime) -int(scalemomentTime)
-            # d2 = d+dt.timedelta(hours=int(scalemomentTime), minutes=i*60)
-            
-            # print(d2)
-            # # print("tyu")
-            # print(df[(df["国語"] > d)  & (df["国語"] < d2)])
+        selectdf = self.pdfulldata[( self.pdfulldata["日付"] > startd)  & (self.pdfulldata["日付"] < endd)]
 
+        choiced_hinshi =set(choiceList) & set(hinshi_list) 
+        # print(selectdf["認識結果"])
+    
+        word_only_data = [[]]
+        word_only_data.clear()
+        i = 0
+        a=[]
+        b= []
+        for sentence in list(selectdf["認識結果"]):
+            a.append(sentence)
+        for i, sentence in enumerate(list(selectdf["デバイス"])):
+            word_only_data.append([sentence,a[i]])
+        # word_only_data = (b,a) 
+        # print(word_only_data)
+        # print(choiced_hinshi)
+        # https://qiita.com/kyoro1/items/59216cc09b56d5b5f760
+        self.mono_word_list=cw.create_choiced_wordcloud(word_only_data ,save_file_name,choiced_hinshi,self.swith_value, self.swith_v_value)
+        # (word_only_data,save_file_name, choiced_hinshi, self.swith_value, self.swith_v_value
+        
+        # print(self.pdfulldata[( self.pdfulldata["日付"] > startd)  & (self.pdfulldata["日付"] < endd)])
+
+    def get_recognize_result(self):
+        result = self.pdfulldata[self.pdfulldata["認識結果"]]
+        print("pandas[認識結果]")
+        print(result)
+        return result
 
     def readCsv(self, openFileName):
         
@@ -194,7 +212,6 @@ class read_csv():
     
         for j, row in enumerate(data):
             if j==0:
-                print("self.fulldatajjj")
                 self.data_name = row
             else:
                 self.full_data.append(row)   
@@ -214,25 +231,20 @@ class read_csv():
                         self.windowOB.append(col)
         file.close()
 
+        dbc()   
         ##################################
         # pandas
         #################################
-        self.pdfulldata =  pd.read_csv("a.csv", header=None)
-        try:
-            # カラム名を設定
-            self.pdfulldata.columns=  ["日付", "時", "音声ファイル", "認識結果", "認識文字数", "確信度", "デバイス", "ウインドウ"]
-        except BaseException as e:
-            print(e)
-            self.pdfulldata = self.pdfulldata.drop([0])#0行目を削除
-            self.pdfulldata =self.pdfulldata.reset_index()#行インデックスの振り直し
-            # カラム名を設定
-            self.pdfulldata.columns = ["日付", "時", "音声ファイル", "認識結果", "認識文字数", "確信度", "デバイス", "ウインドウ"]
+        # カラム名を設定
+        names = ["日", "時", "音声ファイル", "認識結果", "認識文字数", "確信度", "デバイス", "ウインドウ"]
+        self.pdfulldata =  pd.read_csv(openFileName, header=None, names=names)
         # dataFrame型に変換
         self.pdfulldata["日付"] = pd.to_datetime(self.pdfulldata["音声ファイル"].str[:19], format='%Y-%m-%d-%H.%M.%S')
+        self.pdfulldata = self.pdfulldata.dropna(how='any')
+        self.pdfulldata = self.pdfulldata.reset_index()
         self.startday = self.pdfulldata.loc[0]["日付"]
         self.endday = self.pdfulldata.loc[len(self.pdfulldata)-1]["日付"]
         #################################
-        dbc()   
 
     # 分かち書きを入手 
     

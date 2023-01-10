@@ -218,7 +218,8 @@ def create_choiced_wordcloud(word_only_data, save_file_name, hinshilist,switch_v
     wordcountPC   = PP[1]#[('あと', 18), ('人', 12), ...  ]
 
     wordcount_common = {};del_wordcount_PC = {};del_wordcount_USERs = {}
-    print(ALL[1])
+    # print(ALL)
+    # print(word_only_data)
     # for i, wspc in enumerate(ALL[1]):
         # print(wspc)
 
