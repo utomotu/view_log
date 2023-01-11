@@ -8,6 +8,7 @@ $ pip install mecab
 $ pip install wordcloud
 $ pip install pandas
 $ pip install matplotlib
+$ pip install Pillow
 ~~~
 
 ## meca辞書のインストールが必要
