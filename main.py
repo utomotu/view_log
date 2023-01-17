@@ -115,7 +115,9 @@ class Display_log():
         self.swith_value: bool = False
         self.swith_v_value: bool = False
         ffb = tk.Frame(self.root, borderwidth = 2, relief = tk.FLAT, pady=5, padx=5,width=ffbwidth)
-        select_checkbox_button = ttk.Button(text="選択確認", command=lambda:[self._treebox_check(),self._img_show()])
+        # select_checkbox_button = ttk.Button(text="選択確認", command=lambda:[self._treebox_check(),self._img_show()])
+        select_checkbox_button = ttk.Button(text="フルデータ確認", command=lambda:[self.full_data_list("dsa")])
+        
         select_file_button = ttk.Button(text="ファイル選択", command=lambda:[self._select_full_log()])
         select_switch = ttk.Button(text="抜き取りOFF", command=lambda:[click()])
         select_switch_v = ttk.Button(text="昇順", command=lambda:[click_v()])
@@ -139,7 +141,7 @@ class Display_log():
                 self.swith_v_value = not self.swith_v_value
         
         select_checkbox_button.pack(in_= ffb,side = tk.LEFT, expand=True)
-        select_file_button.pack(in_= ffb,side = tk.LEFT, expand=True)
+        # select_file_button.pack(in_= ffb,side = tk.LEFT, expand=True)
         select_switch.pack(in_= ffb,side = tk.LEFT, expand=True)
         # select_switch_v.pack(in_= ffb,side = tk.LEFT, expand=True)
     
@@ -213,8 +215,16 @@ class Display_log():
         # CSVファイルの読み込後の処理
         # ##########################################
         self.time_scale.config(from_ = self.csv_data.startday.strftime("%H"),  to =  self.csv_data.endday.strftime("%H"))
+        # self.csv_data.scale_list(startscaletime, scalemomenttime, self.ct_area.get_checked(), DIR_NAME+filename)
+        self._img_show()
 
         self.root.mainloop()
+    def full_data_list(self, dummy_parameter):
+        path = (os.path.basename(self.FILE_PATH))
+        filename, fileext = os.path.splitext(os.path.basename(path))
+        self.csv_data.full_data_list(self.ct_area.get_checked(), DIR_NAME+filename)
+        self._img_show()
+
 
     def _time_scale_command(self, dummy_parameter):      
         # 引数について　https://stackoverflow.com/questions/23842770/python-function-takes-1-positional-argument-but-2-were-given-how

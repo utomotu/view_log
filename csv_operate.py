@@ -155,11 +155,37 @@ class read_csv():
         self.swith_value = bool(swith_value)
         self.swith_v_value = bool(swith_v_value)
     
+    def full_data_list(self, choiceList, save_file_name):
+        # scaletimefloat = startscaletime - int(startscaletime)#少数部分のみ
+        # scalemomenttimefloat = scalemomenttime - int(scalemomenttime)
+        # endd = startd +dt.timedelta(hours=int(scalemomenttime), minutes=int(scalemomenttimefloat*60))
+#         selectdf = self.pdfulldata[( self.pdfulldata["日付"] > startd)  & (self.pdfulldata["日付"] < endd)]
+# # 
+        choiced_hinshi =set(choiceList) & set(hinshi_list) 
+#         # print(selectdf["認識結果"])
+    
+        word_only_data = [[]]
+        word_only_data.clear()
+        i = 0
+        a=[]
+        b= []
+        for sentence in list(self.pdfulldata["認識結果"]):
+            a.append(sentence)
+        for i, sentence in enumerate(list(self.pdfulldata["デバイス"])):
+            word_only_data.append([sentence,a[i]])
+        # word_only_data = (b,a) 
+        # print(word_only_data)
+        # print(choiced_hinshi)
+        # https://qiita.com/kyoro1/items/59216cc09b56d5b5f760
+        self.mono_word_list=cw.create_choiced_wordcloud(word_only_data ,save_file_name,choiced_hinshi,self.swith_value, self.swith_v_value)
+
+
     def scale_list(self, startscaletime, scalemomenttime, choiceList, save_file_name):
     # , choicedlist:list, save_file_name:str):
         # datetime.replaceがなぜか動かないのでtimestampを作り直す
         scaletimefloat = startscaletime - int(startscaletime)#少数部分のみ
-        startd = dt.datetime(year = int(self.startday.strftime("%Y")), 
+        startd = dt.datetime(
+                            year = int(self.startday.strftime("%Y")), 
                             month= int(self.startday.strftime("%m")), 
                             day = int(self.startday.strftime("%d")),
                             hour= int(startscaletime),

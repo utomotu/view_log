@@ -11,7 +11,7 @@ from PIL import Image
 # from sklearn.feature_extraction.text import TfidfVectorizer
 
 # import Container
-stop_words = ['感じ','もう','し','ん','よう','ー','の','ー','ー'
+stop_words = ['れ','て','感じ','もう','し','ん','よう','ー','の','ー','ー'
                 'そう', 'ない', 'いる', 'する', 'まま', 'よう',
               'てる', 'なる', 'こと', 'もう', 'いい', 'ある',
               'ゆく', 'れる', 'なっ', 'ちゃっ', 'ちょっ',
@@ -22,6 +22,7 @@ stop_words = ['感じ','もう','し','ん','よう','ー','の','ー','ー'
               'でしょ', 'せる', 'なれ', 'どう', 'たい', 'けど', 'でも', 'って',
               'まで', 'なく', 'もの', 'ここ', 'どこ', 'そこ', 'さえ', 'なく',
               'たり', 'なり', 'だっ', 'まで', 'ため', 'ながら', 'より', 'られる', 'です' ,'風','気','別','人']
+print(sorted(stop_words))
 DIR_NAME = "../speech_to_text_2121040"
 VIEWLOG_DIR_PATH = DIR_NAME+"/VIEWLOG_FILE/"#ログを保存する場所
 
@@ -218,7 +219,11 @@ def create_choiced_wordcloud(word_only_data, save_file_name, hinshilist,switch_v
     wordcountPC   = PP[1]#[('あと', 18), ('人', 12), ...  ]
 
     wordcount_common = {};del_wordcount_PC = {};del_wordcount_USERs = {}
-    # print(ALL)
+    print("USER")
+    print(UU)
+    print("PC")
+    print(PP)
+    
     # print(word_only_data)
     # for i, wspc in enumerate(ALL[1]):
         # print(wspc)
