@@ -49,6 +49,12 @@ class read_csv():
         self.startday:dt.timedelta
         self.endday:dt.timedelta
 
+        self.count_mono_wordUser = []
+        self.count_mono_wordPC = []
+        # names = ["ユーザ単語", "ユーザ回数", "PC単語", "PC回数"]
+        # self.pdfulldata =  pd.read_csv(openFileName, header=None, names=names)
+        self.defolt_file_name = " "
+
         self.readCsv(self.filepath)
 
     def re_init(self, filename):
@@ -79,13 +85,16 @@ class read_csv():
             self.result_data.append(row[1][:5]+":"+row[6]+":"+row[3])
             word_only_data.append([row[6],row[3]])
         self.mono_word_list=cw.create_choiced_wordcloud(word_only_data,save_file_name,hinshilist)
+
+        self.count_mono_wordUser = self.mono_word_list[0]
+        self.count_mono_wordPC = self.mono_word_list[1]
+
         return self.result_data
 
     ######################################
     # checkboxで選択された行のみ抽出する
     ######################################
     def compar_list(self, list,save_file_name):
-
         choiced_day = set(list) & set(self.day)
         choiced_windowOB = set(list) & set(self.windowOB)
         choiced_speaker = set(list) & set(self.speaker)
@@ -138,6 +147,8 @@ class read_csv():
         print("choiced_USERword_amount:"+str(self.USER_amout))
         
         self.mono_word_list = cw.create_choiced_wordcloud(word_only_data,save_file_name, choiced_hinshi, self.swith_value, self.swith_v_value)
+        self.count_mono_wordUser = self.mono_word_list[0]
+        self.count_mono_wordPC = self.mono_word_list[1]
         # print(self.mono_word_list)
         
         return self.result_data
@@ -178,10 +189,15 @@ class read_csv():
         # print(choiced_hinshi)
         # https://qiita.com/kyoro1/items/59216cc09b56d5b5f760
         self.mono_word_list=cw.create_choiced_wordcloud(word_only_data ,save_file_name,choiced_hinshi,self.swith_value, self.swith_v_value)
+        self.count_mono_wordUser = self.mono_word_list[0]
+        self.count_mono_wordPC = self.mono_word_list[1]
 
 
     def scale_list(self, startscaletime, scalemomenttime, choiceList, save_file_name):
-    # , choicedlist:list, save_file_name:str):
+        choiced_hinshi =set(choiceList) & set(hinshi_list) 
+        hh = ""
+        for i in choiced_hinshi:
+            hh+=i
         # datetime.replaceがなぜか動かないのでtimestampを作り直す
         scaletimefloat = startscaletime - int(startscaletime)#少数部分のみ
         startd = dt.datetime(
@@ -191,11 +207,15 @@ class read_csv():
                             hour= int(startscaletime),
                             minute = int(scaletimefloat*60),
                             second = 0)
+        tt = startd.strftime("%Y")+startd.strftime("%m")+startd.strftime("%d")+startd.strftime("%H")+startd.strftime("%M")
+        self.defolt_file_name = str(tt)+"_"+str(scalemomenttime)+"h_"+str(hh)+"_"
+        print(self.defolt_file_name)
+        
         scalemomenttimefloat = scalemomenttime - int(scalemomenttime)
         endd = startd +dt.timedelta(hours=int(scalemomenttime), minutes=int(scalemomenttimefloat*60))
         selectdf = self.pdfulldata[( self.pdfulldata["日付"] > startd)  & (self.pdfulldata["日付"] < endd)]
 
-        choiced_hinshi =set(choiceList) & set(hinshi_list) 
+        
         # print(selectdf["認識結果"])
     
         word_only_data = [[]]
@@ -211,11 +231,17 @@ class read_csv():
         # print(word_only_data)
         # print(choiced_hinshi)
         # https://qiita.com/kyoro1/items/59216cc09b56d5b5f760
-        self.mono_word_list=cw.create_choiced_wordcloud(word_only_data ,save_file_name,choiced_hinshi,self.swith_value, self.swith_v_value)
+        self.mono_word_list=cw.create_choiced_wordcloud(word_only_data ,self.defolt_file_name,choiced_hinshi,self.swith_value, self.swith_v_value)
+         
+        self.count_mono_wordUser = self.mono_word_list[0]
+        self.count_mono_wordPC = self.mono_word_list[1]
+        
         # (word_only_data,save_file_name, choiced_hinshi, self.swith_value, self.swith_v_value
         
         # print(self.pdfulldata[( self.pdfulldata["日付"] > startd)  & (self.pdfulldata["日付"] < endd)])
 
+    def get_count_mono_wordUser(self):
+        return self.count_mono_wordUser,self.count_mono_wordPC
     def get_recognize_result(self):
         result = self.pdfulldata[self.pdfulldata["認識結果"]]
         print("pandas[認識結果]")

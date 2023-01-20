@@ -25,6 +25,7 @@ stop_words = ['れ','て','感じ','もう','し','ん','よう','ー','の','�
 print(sorted(stop_words))
 DIR_NAME = "../speech_to_text_2121040"
 VIEWLOG_DIR_PATH = DIR_NAME+"/VIEWLOG_FILE/"#ログを保存する場所
+WCCONTETSLOG_PATH = DIR_NAME+"/WC_RESULT/"
 
 # CSVFILENAME ="./sr_copy"
 mecab = MeCab.Tagger()
@@ -61,7 +62,7 @@ def readCsv(openFileName):
     # print(textsum1,textsum2)
     return text, text2
 
-def get_noun(text,savefilename,hinshilist):
+def get_noun(text ,hinshilist):
     #MeCabで形態素解析
     mecab = MeCab.Tagger('-Ochasen')
     node = mecab.parseToNode(text)
@@ -102,20 +103,7 @@ def get_noun(text,savefilename,hinshilist):
        
     # fl.close()
     # savefilename =  CSVFILENAME+"_count.csv"
-    files = open(savefilename, 'a', encoding="utf_8", newline="")
     
-    # 全体のファイルの保存
-    for i in word_count:
-        for j, contents in enumerate(i):
-            if j==0:
-                word_a = str(contents)
-                # print(word_a)
-            else:
-                num_a = str(contents)
-                # print(num_a)
-        wo = csv.writer(files)
-        wo = wo.writerow([str(word_a), str(num_a)])
-    files.close()
     # print(c.most_common(100))
  
     return tt,word_count
@@ -171,8 +159,8 @@ def pos_color_func(word, font_size, position, orientation, random_state=None,
 
 def create_word_cloud_for_file(CSVFILENAME):
     a = readCsv(CSVFILENAME+".csv")
-    te=get_noun(a[0],CSVFILENAME+'_count_USER.csv')
-    text2=get_noun(a[1],CSVFILENAME+'_count_PC.csv')
+    te=get_noun(a[0])
+    text2=get_noun(a[1])
     
     # parse = tagger.parse(a[0])
     # parse = tagger.parse(a[1])
@@ -208,26 +196,35 @@ def create_choiced_wordcloud(word_only_data, save_file_name, hinshilist,switch_v
                 tAll +=  str(row[1])+" "
         return tUSER, tPC, tAll
     t = ggg(word_only_data)#PCとUserにテキスト分割する
-    UU = get_noun(t[0],save_file_name+'_co_USER.csv',hinshilist)
-    PP = get_noun(t[1],save_file_name+'_co_PC.csv',hinshilist)
-    ALL = get_noun(t[2],save_file_name+'_co_ALL.csv',hinshilist)
-    
-    # print(ALL)
-    teUSER = UU[0] #
-    tePC   = PP[0]
+    UU = get_noun(t[0],hinshilist)
+    PP = get_noun(t[1],hinshilist)
+    ALL = get_noun(t[2],hinshilist)
+
     wordcountUSER = UU[1]
     wordcountPC   = PP[1]#[('あと', 18), ('人', 12), ...  ]
+    worddictUser = {}
+    worddictPC = {}
 
-    wordcount_common = {};del_wordcount_PC = {};del_wordcount_USERs = {}
-    print("USER")
-    print(UU)
-    print("PC")
-    print(PP)
+    files = open(WCCONTETSLOG_PATH+save_file_name+"US.csv", 'a', encoding="utf_8", newline="")
+    # 全体のファイルの保存
+    for contents in UU[1]:
+        wo = csv.writer(files)
+        wo = wo.writerow([str(contents[0]), str(contents[1])])
+        # WC入力用辞書型の頻度リスト
+        worddictUser[contents[0]] = contents[1]
+    files.close()
+
+    files = open(WCCONTETSLOG_PATH+save_file_name+"PC.csv", 'a', encoding="utf_8", newline="")
+    # 全体のファイルの保存
+    for contents in PP[1]:
+        wo = csv.writer(files)
+        wo = wo.writerow([str(contents[0]), str(contents[1])])
+        # WC入力用辞書型の頻度リスト
+        worddictPC[contents[0]] = contents[1]
+    files.close()
+
+    wordcount_common = {};del_wordcount_PC = {};del_wordcount_USERs = {}    
     
-    # print(word_only_data)
-    # for i, wspc in enumerate(ALL[1]):
-        # print(wspc)
-
     for i, wspc in enumerate(wordcountPC):
         # print(wspc)
         for j, weuser in enumerate(wordcountUSER):
@@ -250,11 +247,9 @@ def create_choiced_wordcloud(word_only_data, save_file_name, hinshilist,switch_v
             del del_wordcount_USERs[key]
             # print(key)
 
-
     # print(del_wordcount_PC)
     # print(del_wordcount_USERs)
     # print(wordcount_common)
-
     
     # Windowsにインストールされているフォントを指定 
     # 縦書きの削除　prefer_horizontal=1
@@ -284,24 +279,30 @@ def create_choiced_wordcloud(word_only_data, save_file_name, hinshilist,switch_v
     #     print("acommon")
     #     print(wordcount_common)
     try:
-        wordcloud.generate(teUSER)
+        # wordcloud.generate(teUSER)
+        wordcloud.generate_from_frequencies(worddictUser)
         wordcloud.to_file(VIEWLOG_DIR_PATH+'checed_USER.png') 
+        wordcloud.to_file(WCCONTETSLOG_PATH+save_file_name+'_USER.png') 
+        
     except BaseException as e:
         img = Image.new("L", (wws, wws), 255)
         img.save(VIEWLOG_DIR_PATH+'checed_USER.png')
-        
         print(e)
     try:
-        wordcloud.generate(tePC)
+        # wordcloud.generate(tePC)
+        wordcloud.generate_from_frequencies(worddictPC)
         wordcloud.to_file(VIEWLOG_DIR_PATH+'checed_PC.png') 
+        wordcloud.to_file(WCCONTETSLOG_PATH+'_PC.png') 
     except BaseException as e:
         img = Image.new("L", (wws, wws), 255)
         img.save(VIEWLOG_DIR_PATH+'checed_PC.png')
         
         print(e)
     try:
+        # wordcloud.generate_from_frequencies(worddictUser)
         wordcloud.fit_words(wordcount_common)
-        wordcloud.to_file(VIEWLOG_DIR_PATH+'checed_AndValue.png') 
+        wordcloud.to_file(VIEWLOG_DIR_PATH+save_file_name+'_Common.png') 
+        wordcloud.to_file(WCCONTETSLOG_PATH+'checed_AndValue.png') 
     except BaseException as e:
         # 何も生成されない時は
         img = Image.new("L", (wws, wws), 255)
@@ -310,6 +311,7 @@ def create_choiced_wordcloud(word_only_data, save_file_name, hinshilist,switch_v
     if switch_view:
         try:
             wordcloud.fit_words(del_wordcount_USERs)
+            # wordcloud.generate_from_frequencies(worddictUser)
             wordcloud.to_file(VIEWLOG_DIR_PATH+'checed_USER.png') 
         except BaseException as e:
             img = Image.new("L", (wws, wws), 255)
@@ -321,6 +323,10 @@ def create_choiced_wordcloud(word_only_data, save_file_name, hinshilist,switch_v
         except BaseException as e:
             img = Image.new("L", (wws, wws), 255)
             img.save(VIEWLOG_DIR_PATH+'checed_PC.png')
-            
             print(e)
-    return ALL
+    
+    # print("USER")
+    # print(UU[1])
+    # print("PC")
+    # print(PP[1])
+    return UU[1], PP[1]

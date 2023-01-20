@@ -10,6 +10,7 @@ import  csv_operate as csop
 
 DIR_NAME = "../speech_to_text_2121040"
 VIEWLOG_DIR_PATH = DIR_NAME+"/VIEWLOG_FILE/"#ログを保存する場所
+WCCONTETSLOG_PATH = DIR_NAME+"/WC_RESULT/"
 DAY = "時刻"
 HINSHI = "品詞"
 
@@ -18,7 +19,8 @@ if not os.path.exists(DIR_NAME):
     os.makedirs(DIR_NAME)
 if not os.path.exists(VIEWLOG_DIR_PATH):
     os.makedirs(VIEWLOG_DIR_PATH)
-
+if not os.path.exists(WCCONTETSLOG_PATH):
+    os.makedirs(WCCONTETSLOG_PATH)
 class Display_log():
     def __init__(self):
         self.csv_data:csop
@@ -85,7 +87,7 @@ class Display_log():
                         width = 15,             # 全体の太さ
                         sliderlength = 20,      # スライダー（つまみ）の幅
                         from_ = 0, to = 24, # 最小値（開始の値 # 最大値（終了の値）
-                        resolution=0.5,         # 変化の分解能(初期値:1)
+                        resolution=0.1,         # 変化の分解能(初期値:1)
                         tickinterval=0,         # 目盛りの分解能(初期値0で表示なし)
                         showvalue=False,         # スライダー上の値を非表示にする
                         label = "時刻：0時から0分"
@@ -154,11 +156,35 @@ class Display_log():
         self.freqence_word = ttk.Label(text="")
         self.freqence_word.pack(in_= ffbb,side = tk.LEFT, expand=True)
         
-        self.wordlistbox = tk.Listbox(height=heightline,width=25)
+        ##############################################################
+        # テキストボックス：単語用
+        ##############################################################
+        wwframe = tk.Frame(self.root, borderwidth = 2, relief = tk.FLAT, pady=5, padx=5,width=ffbwidth)
+        column = ('USER', '時間')
+        self.wordlistboxU = ttk.Treeview(height=heightline-2, columns=column)
+        self.wordlistboxU["show"] = "headings"
+        self.wordlistboxU.column(0, width=20)
+        self.wordlistboxU.column(1, width=10)
+        self.wordlistboxU.heading(0, text='USER')
+        self.wordlistboxU.heading(1, text='回数',anchor='center')
+
+        column = ('PC', '時間')
+        self.wordlistboxP = ttk.Treeview(height=heightline-2, columns=column)
+        self.wordlistboxP["show"] = "headings"
+        self.wordlistboxP.column(0, width=20)
+        self.wordlistboxP.column(1, width=10)
+        self.wordlistboxP.heading(0, text='PC')
+        self.wordlistboxP.heading(1, text='回数',anchor='center')
+
+        self.wordlistboxU.pack(in_= wwframe, side = tk.LEFT,ipadx = 30, ipady = 11)        
+        self.wordlistboxP.pack(in_= wwframe, side = tk.LEFT,ipadx = 30, ipady = 11) 
+        ##############################################################
+        # self.wordlistbox = tk.Listbox(height=heightline,width=25)
         
         ffb.pack(in_= frame_button,side = tk.TOP)#ボタン横並び
         ffbb.pack(in_= frame_button,side = tk.TOP)#ボタン横並び
-        self.wordlistbox.pack(in_= frame_button, side = tk.TOP,ipadx = 30, ipady = 11)        
+        
+        wwframe.pack(in_= frame_button, side = tk.TOP,ipadx = 30, ipady = 11)
         
         frame_button.pack(in_= self.root,side = tk.LEFT, expand=True)
         frame_imgUSER = tk.Frame(relief = tk.FLAT)
@@ -181,8 +207,7 @@ class Display_log():
         self.labelUSER.pack(in_= frame_imgUSER ,side = tk.TOP)        
         ##################
         # PC側のFrame
-        ##################
-        
+        ##################       
         lPC = ttk.Label(text="PC音声", font=viewfont)
         lPC.pack(in_= frame_imgPC ,side = tk.TOP)
         self.canvasPC=tk.Canvas(relief= tk.RAISED)
@@ -190,11 +215,9 @@ class Display_log():
         self.labelPC = ttk.Label(text=":", font=viewfont)
         self.labelPC.pack(in_= frame_imgPC ,side = tk.TOP)
 
-
         ##################
         # andVlueのFrame
-        ##################
-        
+        ##################        
         label = ttk.Label(text="共通単語",font=viewfont)
         label.pack(in_= frame_imgcommn ,side = tk.TOP)
         self.canvascommn=tk.Canvas(relief= tk.RAISED)
@@ -219,6 +242,7 @@ class Display_log():
         self._img_show()
 
         self.root.mainloop()
+
     def full_data_list(self, dummy_parameter):
         path = (os.path.basename(self.FILE_PATH))
         filename, fileext = os.path.splitext(os.path.basename(path))
@@ -239,6 +263,29 @@ class Display_log():
         path = (os.path.basename(self.FILE_PATH))
         filename, fileext = os.path.splitext(os.path.basename(path))
         self.csv_data.scale_list(startscaletime, scalemomenttime, self.ct_area.get_checked(), DIR_NAME+filename)
+        
+        a = self.csv_data.get_count_mono_wordUser()
+        print(a[0],a[1])
+        count_mono_wordU = a[0]
+        count_mono_wordP = a[1]
+
+        # ワードクラウド生成単語と頻出度
+        try:
+            # https://stackoverflow.com/questions/22812134/how-to-clear-an-entire-treeview-with-tkinter
+            self.wordlistboxU.delete(*self.wordlistboxU.get_children())
+            self.wordlistboxP.delete(*self.wordlistboxP.get_children())
+        except BaseException as e:
+            print("_time_scale_command in main.py: " + str(e))
+        
+        for i, contents in enumerate(count_mono_wordU):
+            self.wordlistboxU.insert("", "end", values=(contents[0], contents[1]))
+        for i, contents in enumerate(count_mono_wordP):
+            self.wordlistboxP.insert("", "end", values=(contents[0], contents[1]))
+            # try:
+                # self.wordlistbox.insert("", "end", values=(df.iloc[i]["日"], df.iloc[i]["時"], df.iloc[i]["デバイス"], df.iloc[i]["認識結果"]))
+            # except:
+                # self.wordlistbox.insert("", "end", values=(df.iloc[i]["日"], df.iloc[i]["時"], df.iloc[i]["デバイス"], df.iloc[i]["認識結果"]))
+        
         self._img_show()
         
     def _img_show(self):
