@@ -11,8 +11,8 @@ import create_wordcloud as cw
 import pandas as pd
 import datetime as dt
 
-# hinshi_list = ["その他", "感動詞", "記号", "形容詞", "名詞", "助詞", "助動詞", "接続詞", "接頭詞", "動詞", "副詞", "連体詞"] #抽象的なリストの「漫画」の具体例
-hinshi_list = ["感動詞",  "形容詞", "名詞", "動詞", "副詞", "連体詞"] #抽象的なリストの「漫画」の具体例
+hinshi_list = ["その他", "感動詞", "記号", "形容詞", "名詞", "助詞", "助動詞", "接続詞", "接頭詞", "動詞", "副詞", "連体詞", "フィラー"]#抽象的なリストの「漫画」の具体例
+# hinshi_list = ["感動詞",  "形容詞", "名詞", "動詞", "副詞", "連体詞"] #抽象的なリストの「漫画」の具体例
 
 def addwriteCsv(date, time, contents, openFileName = "csvTes.csv"):
     file = open(openFileName, 'a', newline="")
@@ -188,7 +188,14 @@ class read_csv():
         # print(word_only_data)
         # print(choiced_hinshi)
         # https://qiita.com/kyoro1/items/59216cc09b56d5b5f760
-        self.mono_word_list=cw.create_choiced_wordcloud(word_only_data ,save_file_name,choiced_hinshi,self.swith_value, self.swith_v_value)
+        hh = ""
+        for i in choiced_hinshi:
+            hh+=i
+        dd = self.startday.strftime("%Y")+self.startday.strftime("%m")+self.startday.strftime("%d")
+        self.defolt_file_name = str(dd)+"_"+"fulldata_"+str(hh)
+        # print(self.defolt_file_name)
+
+        self.mono_word_list=cw.create_choiced_wordcloud(word_only_data ,self.defolt_file_name ,choiced_hinshi,self.swith_value, self.swith_v_value)
         self.count_mono_wordUser = self.mono_word_list[0]
         self.count_mono_wordPC = self.mono_word_list[1]
 

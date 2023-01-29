@@ -87,7 +87,7 @@ class Display_log():
                         width = 15,             # 全体の太さ
                         sliderlength = 20,      # スライダー（つまみ）の幅
                         from_ = 0, to = 24, # 最小値（開始の値 # 最大値（終了の値）
-                        resolution=0.1,         # 変化の分解能(初期値:1)
+                        resolution=0.25,         # 変化の分解能(初期値:1)
                         tickinterval=0,         # 目盛りの分解能(初期値0で表示なし)
                         showvalue=False,         # スライダー上の値を非表示にする
                         label = "時刻：0時から0分"
@@ -125,6 +125,7 @@ class Display_log():
         select_switch_v = ttk.Button(text="昇順", command=lambda:[click_v()])
 
         def click():
+            
             if self.swith_value:
                 select_switch.config(text='抜き取りOFF')
                 self.swith_value = not self.swith_value
@@ -132,6 +133,7 @@ class Display_log():
             else:
                 select_switch.config(text='抜き取りON')
                 self.swith_value = not self.swith_value
+            self.csv_data.set_swith_value(self.swith_value, self.swith_v_value)#スイッチバリューを反映させておく
         
         def click_v():
             if self.swith_v_value:
@@ -249,6 +251,22 @@ class Display_log():
         self.csv_data.full_data_list(self.ct_area.get_checked(), DIR_NAME+filename)
         self._img_show()
 
+        a = self.csv_data.get_count_mono_wordUser()
+        print(a[0],a[1])
+        count_mono_wordU = a[0]
+        count_mono_wordP = a[1]
+        # ワードクラウド生成単語と頻出度
+        try:
+            # https://stackoverflow.com/questions/22812134/how-to-clear-an-entire-treeview-with-tkinter
+            self.wordlistboxU.delete(*self.wordlistboxU.get_children())
+            self.wordlistboxP.delete(*self.wordlistboxP.get_children())
+        except BaseException as e:
+            print("_time_scale_command in main.py: " + str(e))
+        for i, contents in enumerate(count_mono_wordU):
+            self.wordlistboxU.insert("", "end", values=(contents[0], contents[1]))
+        for i, contents in enumerate(count_mono_wordP):
+            self.wordlistboxP.insert("", "end", values=(contents[0], contents[1]))
+
 
     def _time_scale_command(self, dummy_parameter):      
         # 引数について　https://stackoverflow.com/questions/23842770/python-function-takes-1-positional-argument-but-2-were-given-how
@@ -300,13 +318,13 @@ class Display_log():
             img = img.resize(( imgsize, imgsize ))
             img.save(VIEWLOG_DIR_PATH+'checed_resizeUSER.png')
 
-            img = Image.open(VIEWLOG_DIR_PATH+'checed_AndValue.png')
+            img = Image.open(VIEWLOG_DIR_PATH+'checed_common.png')
             img = img.resize(( imgsize, imgsize ))
-            img.save(VIEWLOG_DIR_PATH+'checed_resizeAndValue.png')
+            img.save(VIEWLOG_DIR_PATH+'checed_resizecommon.png')
 
             imgUSER     = tk.PhotoImage(file=VIEWLOG_DIR_PATH+'checed_resizeUSER.png')
             imgPC       = tk.PhotoImage(file=VIEWLOG_DIR_PATH+'checked_resizePC.png')
-            imgcommn = tk.PhotoImage(file=VIEWLOG_DIR_PATH+'checed_resizeAndValue.png')
+            imgcommn = tk.PhotoImage(file=VIEWLOG_DIR_PATH+'checed_resizecommon.png')
 
             self.canvasPC.delete('p1')
             self.canvasUSER.delete('p1')
@@ -375,6 +393,7 @@ class Display_log():
         for wspc in mmww[1]:
             self.wordlistbox.insert(tk.END, wspc[0])
             print(wspc[0])
+    
     def _resarch_word(self):
         # indices =self.wordlistbox.curselection()
         # index = indices[0]
@@ -402,7 +421,8 @@ class Display_log():
                             
     def view_log(self):
         abstract_list = [HINSHI] #抽象的なリスト
-        hinshi_list = ["感動詞", "形容詞", "名詞", "接続詞", "動詞", "副詞", "連体詞"] #抽象的なリストの「漫画」の具体例
+        hinshi_list = ["その他", "感動詞", "記号", "形容詞", "名詞", "助詞", "助動詞", "接続詞", "接頭詞", "動詞", "副詞", "連体詞", "フィラー"] #抽象的なリストの「漫画」の具体例
+        # hinshi_list = ["感動詞", "形容詞", "名詞", "接続詞", "動詞", "副詞", "連体詞"] #抽象的なリストの「漫画」の具体例
         # チェックボックスに情報を付与
         for abstract in abstract_list:
             self.ct_area.insert("", "0", abstract, text=abstract)        
