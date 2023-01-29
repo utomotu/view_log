@@ -58,7 +58,8 @@ class Display_log():
         
         # テキストボックス：フルログ用
         column = ('日', '時間',"話者", '認識結果')
-        self.tree = ttk.Treeview(height=heightline-2, columns=column)
+        self.tree = ttk.Treeview(height=heightline-2, columns=column,show="headings")
+        # frame, column=(1), show="headings", 
         self.tree["show"] = "headings"
         self.tree.column(0, width=40)
         self.tree.column(1, width=80)
@@ -152,9 +153,12 @@ class Display_log():
         ffbb = tk.Frame(self.root, borderwidth = 2, relief = tk.FLAT, pady=5, padx=5,width=ffbwidth)
         
         self.entry1 = ttk.Entry(width=8)
-        word_button = ttk.Button(text="単語検索", command=lambda:[self._resarch_word()])
+        # 
+        word_button = ttk.Button(text="単語検索", command=lambda:[self._resarch_word_list()])
+        word_button2 = ttk.Button(text="▼", command=lambda:[self._resarch_word()])
         self.entry1.pack(in_=ffbb, side=tk.LEFT, anchor="w", padx=4, pady=4, expand=True)
         word_button.pack(in_= ffbb,side = tk.LEFT, expand=True)
+        word_button2.pack(in_= ffbb,side = tk.LEFT, expand=True)
         self.freqence_word = ttk.Label(text="")
         self.freqence_word.pack(in_= ffbb,side = tk.LEFT, expand=True)
         
@@ -242,8 +246,37 @@ class Display_log():
         self.time_scale.config(from_ = self.csv_data.startday.strftime("%H"),  to =  self.csv_data.endday.strftime("%H"))
         # self.csv_data.scale_list(startscaletime, scalemomenttime, self.ct_area.get_checked(), DIR_NAME+filename)
         self._img_show()
-
+        
+        # self.check_word()
+        self.resarch_word_index_list =  []
+        self.resarch_word_count_index = 0
+        self.wordlistboxU.bind("<Double-1>", self.treeview_1_DoubleU) # ダブルクリックにてイベント発生
+        self.wordlistboxP.bind("<Double-1>", self.treeview_1_DoubleP) # ダブルクリックにてイベント発生
         self.root.mainloop()
+        
+    def treeview_1_DoubleU(self, event):
+        selected_item = self.wordlistboxU.selection()[0] # 選択した行を取得        
+        values_1 = self.wordlistboxU.item(selected_item)['values'][0] # 値の取得
+        print(values_1)
+        self.entry1.delete(0,"end")
+        self.entry1.insert(0, values_1)
+        
+        # resarch_word = self.entry1.get()
+        self.resarch_word_index_list =  []
+        for i, child in enumerate(self.tree.get_children()): 
+            if values_1 in child:
+                self.resarch_word_index_list.append(i)
+
+    def treeview_1_DoubleP(self, event):
+        selected_item = self.wordlistboxP.selection()[0] # 選択した行を取得        
+        values_1 = self.wordlistboxP.item(selected_item)['values'][0] # 値の取得
+        self.entry1.delete(0,"end")
+        self.entry1.insert(0, values_1)
+        
+        self.resarch_word_index_list =  []
+        for i, child in enumerate(self.tree.get_children()): 
+            if values_1 in child:
+                self.resarch_word_index_list.append(i)
 
     def full_data_list(self, dummy_parameter):
         path = (os.path.basename(self.FILE_PATH))
@@ -305,7 +338,7 @@ class Display_log():
                 # self.wordlistbox.insert("", "end", values=(df.iloc[i]["日"], df.iloc[i]["時"], df.iloc[i]["デバイス"], df.iloc[i]["認識結果"]))
         
         self._img_show()
-        
+
     def _img_show(self):
         try:   
             # 画像を指定              
@@ -369,7 +402,6 @@ class Display_log():
                     except:
                         self.tree.insert("", "end", values=(df.iloc[i]["日"], df.iloc[i]["時"], df.iloc[i]["デバイス"], df.iloc[i]["認識結果"]))
                 
-                
                 # なんの処理してるんだ棟．．．．
                 # self.csv_data.re_init(self.FILE_PATH)     
             except BaseException as e:
@@ -394,7 +426,64 @@ class Display_log():
             self.wordlistbox.insert(tk.END, wspc[0])
             print(wspc[0])
     
+    ###################################
+    # 指定した単語が出現する行数を格納するリストの作成
+    ###################################
+    def _resarch_word_list(self):
+        self.resarch_word_count_index = 0
+        resarch_word = self.entry1.get()
+        self.resarch_word_index_list =  []
+        print("self.resarch_word_index_list")
+        print("resarch word: "+resarch_word)
+        for i, child in enumerate(self.tree.get_children()): 
+            if resarch_word in self.tree.item(child, 'values')[3]:
+                self.resarch_word_index_list.append(i)
+                print("result: "+str(self.tree.item(child, 'values')[3]))
+                self.tree.item(item=child, tags="check")
+                # self.tree.tag_configure
+        
+        self.tree.tag_configure("check", background='green')
+        print(self.resarch_word_index_list)
+
+    ###################################
+    # 指定した単語を探して，行を移動する
+    ###################################
     def _resarch_word(self):
+        self.freqence_word.config(text=str(self.resarch_word_count_index+1)/str(len(self.resarch_word_index_list)+1)+"番目")
+        try:
+            index = self.resarch_word_count_index
+            for i, child in enumerate(self.tree.get_children()): 
+                if i == self.resarch_word_index_list[index]:
+                    print("resarch index")
+                    print(i)
+                # if i == 20:
+                    # https://38firelife.com/?p=1557#toc3
+                    self.tree.see(child)
+                    # https://syachiku.net/pythontkintertree/#toc4
+                    # self.tree.config(item = child, tags= "green")
+        
+            self.resarch_word_count_index+=1
+        except:
+            print("reste resarch word index")
+            self.resarch_word_count_index = 0
+            index = self.resarch_word_count_index
+            for i, child in enumerate(self.tree.get_children()): 
+                if i == self.resarch_word_index_list[index]:
+                    print("resarch index")
+                    print(i)
+                # if i == 20:
+                    # https://38firelife.com/?p=1557#toc3
+                    self.tree.see(child)
+        
+
+        # print(self.tree.item(child, 'values')[3])
+        # # if self.tree.item(child, 'values')[1]:
+        #     # total_1 += float(Treeview_1.item(child, 'values')[1]) # Treeview にて特定の列の合計値を算出
+        # item = self.tree.selection_add(self.tree.get_children("")[99])
+        # print(item)
+        # self.tree.see(item)
+
+
         # indices =self.wordlistbox.curselection()
         # index = indices[0]
         # try:
@@ -402,12 +491,10 @@ class Display_log():
         #     self.entry1.config(text = resarch_word)
         #     # print(resarch_word)
         # except:
-        resarch_word = self.entry1.get()
-        print(resarch_word)
         
         #列番号を元に更新する
-        cc = 0 
-        dd = self.read_data
+        # cc = 0 
+        # dd = self.read_data
         # for i,text in enumerate(dd):
         #     if resarch_word in text:
         #         self.listbox2.itemconfig(int(i), {'bg': 'ffffff'})
@@ -416,8 +503,8 @@ class Display_log():
         #     if resarch_word in text:
         #         self.listbox2.itemconfig(int(i), {'bg': '#f0e68c'})
         #         cc+=1
-        print(cc)
-        self.freqence_word.config(text=str(cc)+"回")
+        # print(cc)
+        # self.freqence_word.config(text=str(cc)+"回")
                             
     def view_log(self):
         abstract_list = [HINSHI] #抽象的なリスト
